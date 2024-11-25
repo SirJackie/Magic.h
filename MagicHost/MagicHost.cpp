@@ -109,9 +109,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RECT rect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
 	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
+	int winXPos = 50, winYPos = 50;
+
 	// 根据调整后的窗口大小创建窗口
 	HWND hwnd = CreateWindowEx(0, L"Win32Demo", L"Magic.h Graphical Interface | Made with LOVE by @SirJackie (GitHub)",
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT,
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE, winXPos, winYPos,
 		rect.right - rect.left, rect.bottom - rect.top,
 		NULL, NULL, hInstance, NULL);
 
