@@ -70,11 +70,7 @@ unsigned char colorCounter = 50;
 float sinCurver = 0.0f;
 bool countReversely = false;
 
-void Setup(HWND& hwnd, bool* wannaUpdate) {
-
-	// Initialize the time counters
-	thisTime = lastTime = MicroClock();
-
+void LandingAnimation() {
 	// Clear Screen with Black: (0, 0, 0)
 	for (int y = 0; y < 600; y++) {
 		for (int x = 0; x < 800; x++) {
@@ -108,7 +104,15 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 	else {
 		colorCounter += 5;  // MUST be factor of 255
 	}
-	
+}
+
+void Setup(HWND& hwnd, bool* wannaUpdate) {
+
+	// Initialize the time counters
+	thisTime = lastTime = MicroClock();
+
+	// Loading & Landing Animation
+	LandingAnimation();
 
 	/*
 	** --------------------------------------------------
@@ -149,6 +153,8 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 	fpsLocker.Lock(thisTime - lastTime);
 	lastTime = thisTime;
 }
+
+bool everUpdated = false;
 
 void Update(HWND& hwnd, bool* wannaExit) {
 
@@ -211,7 +217,21 @@ void Update(HWND& hwnd, bool* wannaExit) {
 		*(dst++) = 0;
 	}
 
+	if (everUpdated == false) {
+		// Prevent Black Screen Appear when User Only Called Magic()
+		// And Pushed NO FRAMES. A User-Friendly Feature.
+		LandingAnimation();
+
+		// Count & Lock FPS
+		thisTime = MicroClock();
+		fpsCalculator.Count(thisTime - lastTime);
+		fpsLocker.Lock(thisTime - lastTime);
+		lastTime = thisTime;
+	}
+
 	if (swapSignal == (unsigned char)1) {
+		everUpdated = true;
+
 		swapSignal = (unsigned char)0;
 		bufferDelta = bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
 		gotitSignal = (unsigned char)1;
