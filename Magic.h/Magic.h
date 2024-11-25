@@ -22,6 +22,14 @@
 
 
 /*
+** Fast Inline Functions
+*/
+
+
+#define clamp(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal))? (maxVal) : (value)))
+
+
+/*
 ** Definitions: Buffer
 */
 
@@ -292,6 +300,26 @@ void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
 
 void Clean(char r, char g, char b){
 	Fill(0, 0, 800, 600, r, g, b);
+}
+
+
+inline void MagicSetPixel(int x, int y, char r, char g, char b) {
+	x = clamp(0, x, 799);
+	y = clamp(0, y, 599);
+
+	pixels[((y * 800) + x) * 3 + 0] = b;  // B
+	pixels[((y * 800) + x) * 3 + 1] = g;  // G
+	pixels[((y * 800) + x) * 3 + 2] = r;  // R
+}
+
+
+inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
+	x = clamp(0, x, 799);
+	y = clamp(0, y, 599);
+
+	*b = pixels[((y * 800) + x) * 3 + 0];  // B
+	*g = pixels[((y * 800) + x) * 3 + 1];  // G
+	*r = pixels[((y * 800) + x) * 3 + 2];  // R
 }
 
 
