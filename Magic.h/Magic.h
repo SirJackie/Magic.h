@@ -234,6 +234,12 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	// Read Info Header
 	fread(&info_header, sizeof(info_header), 1, file);
 
+	// Sometimes BMP Encoder Will Save a image_size = 0, which sucks.
+	if (info_header.image_size == 0) {
+		// Manual Correction Required.
+		info_header.image_size = header.size - header.offset;
+	}
+
 	// Allocate Memory for Image Storage
 	(*image_data_ptr) = (unsigned char *)malloc(info_header.image_size);
 	if (!(*image_data_ptr)) {
@@ -251,8 +257,11 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	// Close File
 	fclose(file);
 
+	// Get Width & Height
 	*width = info_header.width;
 	*height = info_header.height;
+
+	// Get Pitch (Pitch >= Width * 3)
 	*pitch = info_header.image_size / info_header.height;
 }
 
