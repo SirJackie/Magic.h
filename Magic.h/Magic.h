@@ -121,7 +121,7 @@ void Magic(int fps = 60){
 	// Map Up the Shared Memory
 	pBuf = (LPTSTR) MapViewOfFile(
 		hMapFile,               // HANDLE of Shared Memory
-		FILE_MAP_WRITE,         // Write Permission
+		FILE_MAP_ALL_ACCESS,    // Write Permission
 		0,                      // Mapping Offset
 		0,                      // Mapping Offset
 		PIPE_LENGTH             // Mapping SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
@@ -173,17 +173,29 @@ void Quit(){
 	CloseHandle(hMapFile);
 }
 
+// DISABLE MSVC OPEIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
 
 void Show(){
 	// Swapping Buffers
 	bufferDelta = bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
 	swapSignal = (unsigned char) 1;
+
+	// You MUST DISABLE MSVC OPEIMIZATION in Order to Make the Following Line Work.
 	while(gotitSignal != 1);  // Wait Until Pushing Finished.
+	
 	gotitSignal = (unsigned char) 0;
 
 	// Update Pixels Buffer Pointer
 	pixels = ((char*)pBuf + bufferDelta);
 }
+
+// DISABLE MSVC OPEIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
 
 
 /*
