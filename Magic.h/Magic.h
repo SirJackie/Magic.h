@@ -249,6 +249,17 @@ public:
 	void Load(const char* filename){
 		LoadBMP(filename, &width, &height, &pixels);
 	}
+		
+	void Draw(int x, int y){
+		for (int y = 0; y < this->height; y++) {
+			for (int x = 0; x < this->width; x++) {
+				int picture_y = this->height - y - 1;  // Picture is Y-Axis Reversed.
+				::pixels[((y * 800) + x) * 3 + 0] = this->pixels[((picture_y * this->width) + x) * 3 + 0];
+				::pixels[((y * 800) + x) * 3 + 1] = this->pixels[((picture_y * this->width) + x) * 3 + 1];
+				::pixels[((y * 800) + x) * 3 + 2] = this->pixels[((picture_y * this->width) + x) * 3 + 2];
+			}
+		}
+	}
 };
 
 
