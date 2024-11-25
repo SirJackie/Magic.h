@@ -270,13 +270,19 @@ public:
 		LoadBMP(filename, &width, &height, &pixels);
 	}
 		
-	void Draw(int x, int y){
+	void Draw(int x_, int y_){
+
+		// Avoid User to Draw Outside the Border
+		x_ = clamp(0, x_, 800 - this->width + 1);
+		y_ = clamp(0, y_, 600 - this->height + 1);
+
+		// Fast Fillings
 		for (int y = 0; y < this->height; y++) {
 			for (int x = 0; x < this->width; x++) {
 				int picture_y = this->height - y - 1;  // Picture is Y-Axis Reversed.
-				::pixels[((y * 800) + x) * 3 + 0] = this->pixels[((picture_y * this->width) + x) * 3 + 0];
-				::pixels[((y * 800) + x) * 3 + 1] = this->pixels[((picture_y * this->width) + x) * 3 + 1];
-				::pixels[((y * 800) + x) * 3 + 2] = this->pixels[((picture_y * this->width) + x) * 3 + 2];
+				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 0] = this->pixels[((picture_y * this->width) + x) * 3 + 0];
+				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 1] = this->pixels[((picture_y * this->width) + x) * 3 + 1];
+				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 2] = this->pixels[((picture_y * this->width) + x) * 3 + 2];
 			}
 		}
 	}
