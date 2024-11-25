@@ -21,6 +21,7 @@ BYTE *image = &image_Store[0];
 // ----------
 
 bool firstFrame = true;
+bool wannaUpdate = false;
 bool wannaExit = false;
 FPSCalculator fpsCalculator;
 
@@ -134,8 +135,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		if (firstFrame) {
-			Setup(hwnd);
-			firstFrame = false;
+			Setup(hwnd, &wannaUpdate);
+			if (wannaUpdate == true) {
+				firstFrame = false;
+				// Only Terminate First Frame when it "wannaUpdate".
+			}
 		}
 		else {
 			Update(hwnd, &wannaExit);

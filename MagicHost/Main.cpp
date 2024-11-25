@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <time.h>
+#include <math.h>
 #include "Main.h"
 #include "FPSCalculator.h"
 #include "FPSLocker.h"
@@ -51,7 +52,7 @@ int bufferDelta = PAGE_LENGTH + SIGN_LENGTH;  // Start from the second buffer.
 // FPS Counter & Locker
 uint64 thisTime, lastTime;
 extern FPSCalculator fpsCalculator;
-FPSLocker fpsLocker(1000);
+FPSLocker fpsLocker(60);
 
 bool IsWindowFocused(HWND hwnd) {
 	// 获取当前拥有焦点的窗口
@@ -61,7 +62,53 @@ bool IsWindowFocused(HWND hwnd) {
 	return (focusedWindow == hwnd);
 }
 
-void Setup(HWND& hwnd) {
+// For Loading & Landing Animation
+int squareSize = 50;
+int squareX = (800 - squareSize) / 2;
+int squareY = (600 - squareSize) / 2;
+unsigned char colorCounter = 50;
+float sinCurver = 0.0f;
+bool countReversely = false;
+
+void Setup(HWND& hwnd, bool* wannaUpdate) {
+
+	// Initialize the time counters
+	thisTime = lastTime = MicroClock();
+
+	// Clear Screen with Black: (0, 0, 0)
+	for (int y = 0; y < 600; y++) {
+		for (int x = 0; x < 800; x++) {
+			image[(y * 800 + x) * 4 + 0] = 0;
+			image[(y * 800 + x) * 4 + 1] = 0;
+			image[(y * 800 + x) * 4 + 2] = 0;
+		}
+	}
+
+	// Loading & Landing Animation
+	for (int y = 0; y < squareSize; y++) {
+		int currentY = squareY - 50 + y + sin(sinCurver) * 60;
+		for (int x = 0; x < squareSize; x++) {
+			image[(currentY * 800 + squareX + x) * 4 + 0] = colorCounter;
+			image[(currentY * 800 + squareX + x) * 4 + 1] = colorCounter;
+			image[(currentY * 800 + squareX + x) * 4 + 2] = colorCounter;
+		}
+	}
+	sinCurver += 0.08f;
+
+	if (colorCounter == 255) {
+		countReversely = true;
+	}
+	else if (colorCounter == 50) {
+		countReversely = false;
+	}
+
+	if (countReversely) {
+		colorCounter -= 5;  // MUST be factor of 255
+	}
+	else {
+		colorCounter += 5;  // MUST be factor of 255
+	}
+	
 
 	/*
 	** --------------------------------------------------
@@ -69,19 +116,17 @@ void Setup(HWND& hwnd) {
 	** --------------------------------------------------
 	*/
 
-	// Open Shared Memory
-	while (hMapFile == NULL) {
-		hMapFile = OpenFileMapping(
-			FILE_MAP_ALL_ACCESS,    // READ & WRITE Permission
-			FALSE,                  // DO NOT Inherit
-			TEXT("MagicDotHBuffer") // NAME of Shared Memory
-		);
-		OutputDebugString(L"Open Shared Memory Failed, Retry...\n");
-		Sleep(10);
-	}
+	// @@@ Open Shared Memory
+	hMapFile = OpenFileMapping(
+		FILE_MAP_ALL_ACCESS,    // READ & WRITE Permission
+		FALSE,                  // DO NOT Inherit
+		TEXT("MagicDotHBuffer") // NAME of Shared Memory
+	);
+	OutputDebugString(L"Open Shared Memory Failed, Retry...\n");
+	Sleep(10);
 
-	// Map Up the Shared Memory
-	while (pBuf == NULL) {
+	if (hMapFile != NULL) {
+		// @@@ Map Up the Shared Memory
 		pBuf = (LPTSTR)MapViewOfFile(
 			hMapFile,               // HANDLE of Shared Memory
 			FILE_MAP_ALL_ACCESS,    // READ & WRITE Permission
@@ -91,10 +136,18 @@ void Setup(HWND& hwnd) {
 		);
 		OutputDebugString(L"Map Shared Memory Failed, Retry...\n");
 		Sleep(10);
+
+		if (pBuf != NULL) {
+			// Enter the Main Game-Loop
+			*wannaUpdate = true;
+		}
 	}
 
-	// Initialize the time counters
-	thisTime = lastTime = MicroClock();
+	// Count & Lock FPS
+	thisTime = MicroClock();
+	fpsCalculator.Count(thisTime - lastTime);
+	fpsLocker.Lock(thisTime - lastTime);
+	lastTime = thisTime;
 }
 
 void Update(HWND& hwnd, bool* wannaExit) {
