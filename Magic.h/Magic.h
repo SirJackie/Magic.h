@@ -26,7 +26,7 @@
 */
 
 
-#define clamp(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal))? (maxVal) : (value)))
+#define clamp(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal-1))? (maxVal-1) : (value)))
 
 
 /*
@@ -280,6 +280,27 @@ public:
 			}
 		}
 	}
+
+	inline void SetPixel(int x, int y, char r, char g, char b) {
+		x = clamp(0, x, this->width);
+		y = clamp(0, y, this->height);
+		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
+
+		this->pixels[((y * this->width) + x) * 3 + 0] = b;  // B
+		this->pixels[((y * this->width) + x) * 3 + 1] = g;  // G
+		this->pixels[((y * this->width) + x) * 3 + 2] = r;  // R
+	}
+
+
+	inline void GetPixel(int x, int y, char* r, char* g, char* b) {
+		x = clamp(0, x, this->width);
+		y = clamp(0, y, this->height);
+		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
+
+		*b = this->pixels[((y * this->width) + x) * 3 + 0];  // B
+		*g = this->pixels[((y * this->width) + x) * 3 + 1];  // G
+		*r = this->pixels[((y * this->width) + x) * 3 + 2];  // R
+	}
 };
 
 
@@ -304,8 +325,8 @@ void Clean(char r, char g, char b){
 
 
 inline void MagicSetPixel(int x, int y, char r, char g, char b) {
-	x = clamp(0, x, 799);
-	y = clamp(0, y, 599);
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
 
 	pixels[((y * 800) + x) * 3 + 0] = b;  // B
 	pixels[((y * 800) + x) * 3 + 1] = g;  // G
@@ -314,8 +335,8 @@ inline void MagicSetPixel(int x, int y, char r, char g, char b) {
 
 
 inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
-	x = clamp(0, x, 799);
-	y = clamp(0, y, 599);
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
 
 	*b = pixels[((y * 800) + x) * 3 + 0];  // B
 	*g = pixels[((y * 800) + x) * 3 + 1];  // G
