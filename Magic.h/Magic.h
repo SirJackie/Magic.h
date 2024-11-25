@@ -85,13 +85,13 @@ typedef struct {
 
 
 void Magic(int fps = 60){
-	
+
 	/*
 	** --------------------------------------------------
 	** Initialize Shared Memory
 	** --------------------------------------------------
 	*/
-	
+
 	// Create Shared Memory
 	hMapFile = CreateFileMapping(
 		INVALID_HANDLE_VALUE,   // Use the system paging file
@@ -104,7 +104,7 @@ void Magic(int fps = 60){
 	if (hMapFile == NULL) {
 		GetLastError();  // Error Code.
 	}
-	
+
 	// Map Up the Shared Memory
 	pBuf = (LPTSTR) MapViewOfFile(
 		hMapFile,               // HANDLE of Shared Memory
@@ -113,32 +113,32 @@ void Magic(int fps = 60){
 		0,                      // Mapping Offset
 		PIPE_LENGTH             // Mapping SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
 	);
-	
+
 	if (pBuf == NULL) {
 		GetLastError();  // Error Code.
 		CloseHandle(hMapFile);
 	}
-	
+
 	// Initialize Pixels Buffer Pointer
 	pixels = ((char*)pBuf + bufferDelta);
-	
+
 	/*
 	** --------------------------------------------------
 	** Initialize Pipe Signals
 	** --------------------------------------------------
 	*/
-	
+
 	exitSignal  = (unsigned char) 0;
 	swapSignal  = (unsigned char) 0;
 	gotitSignal = (unsigned char) 0;
 	fpsLockRate = (int) fps;
-	
+
 	/*
 	** --------------------------------------------------
 	** Initialize MagicHost.exe
 	** --------------------------------------------------
 	*/
-	
+
 	system("start MagicHost.exe");
 }
 
@@ -149,12 +149,12 @@ void Quit(){
 	** Finalize Shared Memory
 	** --------------------------------------------------
 	*/
-	
+
 	// Sending Exit Signal
 	exitSignal = (unsigned char) 1;
 	while(gotitSignal != 1);  // Wait Until Exiting Finished.
 	gotitSignal = (unsigned char) 0;
-	
+
 	// Delete Shared Memory
 	UnmapViewOfFile(pBuf);
 	CloseHandle(hMapFile);
@@ -167,7 +167,7 @@ void Show(){
 	swapSignal = (unsigned char) 1;
 	while(gotitSignal != 1);  // Wait Until Pushing Finished.
 	gotitSignal = (unsigned char) 0;
-	
+
 	// Update Pixels Buffer Pointer
 	pixels = ((char*)pBuf + bufferDelta);
 }
@@ -227,11 +227,31 @@ class Picture{
 public:
 	int width, height;
 	unsigned char* pixels;
-	
+
 	void Load(const char* filename){
 		LoadBMP(filename, &width, &height, &pixels);
 	}
 };
+
+
+/*
+** Function: Drawings
+*/
+
+
+void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
+	for (int y = y0; y < y1; y++){
+		for (int x = x0; x < x1; x++){
+			pixels[((y * 800) + x) * 3 + 0] = b;  // B
+			pixels[((y * 800) + x) * 3 + 1] = g;  // G
+			pixels[((y * 800) + x) * 3 + 2] = r;  // R
+		}
+	}
+}
+
+void Clean(char r, char g, char b){
+	Fill(0, 0, 800, 600, r, g, b);
+}
 
 
 #endif
