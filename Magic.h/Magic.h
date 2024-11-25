@@ -9,6 +9,19 @@
 
 
 /*
+** Compiler Specific
+*/
+
+
+// MSVC Compiler WChar Feature Compatibility.
+#if defined(_MSC_VER)
+#define PIPE_NAME TEXT("MagicDotHBuffer")
+#else
+#define PIPE_NAME ("MagicDotHBuffer")
+#endif
+
+
+/*
 ** Definitions: Buffer
 */
 
@@ -99,7 +112,7 @@ void Magic(int fps = 60){
 		PAGE_READWRITE,         // Read and write permissions
 		0,                      // Max Obj Size's HIGHER 32 Bits
 		PIPE_LENGTH,            // Max Obj Size's LOWER 32 Bits, aka PIPE SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
-		"MagicDotHBuffer"       // NAME of Shared Memory
+		PIPE_NAME               // NAME of Shared Memory
 	);
 	if (hMapFile == NULL) {
 		GetLastError();  // Error Code.
@@ -184,7 +197,12 @@ void LoadBMP(const char* filename, int* width, int* height, unsigned char** imag
 	BMPInfoHeader info_header;
 
 	// Load Bitmap File
+#if defined(_MSC_VER)
+	fopen_s(&file, filename, "rb");
+#else
 	file = fopen(filename, "rb");
+#endif
+
 	if (!file) {
 		perror("Error opening file");
 		return;
