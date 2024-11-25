@@ -211,7 +211,7 @@ void Show(){
 */
 
 
-void LoadBMP(const char* filename, int* width, int* height, unsigned char** image_data_ptr){
+void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned char** image_data_ptr){
 	FILE *file;
 	BMPHeader header;
 	BMPInfoHeader info_header;
@@ -253,6 +253,7 @@ void LoadBMP(const char* filename, int* width, int* height, unsigned char** imag
 
 	*width = info_header.width;
 	*height = info_header.height;
+	*pitch = info_header.image_size / info_header.height;
 }
 
 
@@ -263,11 +264,11 @@ void LoadBMP(const char* filename, int* width, int* height, unsigned char** imag
 
 class Picture{
 public:
-	int width, height;
+	int width, height, pitch;
 	unsigned char* pixels;
 
 	void Load(const char* filename){
-		LoadBMP(filename, &width, &height, &pixels);
+		LoadBMP(filename, &width, &height, &pitch, &pixels);
 	}
 		
 	void Draw(int x_, int y_){
@@ -280,9 +281,9 @@ public:
 		for (int y = 0; y < this->height; y++) {
 			for (int x = 0; x < this->width; x++) {
 				int picture_y = this->height - y - 1;  // Picture is Y-Axis Reversed.
-				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 0] = this->pixels[((picture_y * this->width) + x) * 3 + 0];
-				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 1] = this->pixels[((picture_y * this->width) + x) * 3 + 1];
-				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 2] = this->pixels[((picture_y * this->width) + x) * 3 + 2];
+				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 0] = this->pixels[(picture_y * this->pitch) + (x * 3) + 0];
+				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 1] = this->pixels[(picture_y * this->pitch) + (x * 3) + 1];
+				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 2] = this->pixels[(picture_y * this->pitch) + (x * 3) + 2];
 			}
 		}
 	}
@@ -292,9 +293,9 @@ public:
 		y = clamp(0, y, this->height);
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
 
-		this->pixels[((y * this->width) + x) * 3 + 0] = b;  // B
-		this->pixels[((y * this->width) + x) * 3 + 1] = g;  // G
-		this->pixels[((y * this->width) + x) * 3 + 2] = r;  // R
+		this->pixels[(y * this->pitch) + (x * 3) + 0] = b;  // B
+		this->pixels[(y * this->pitch) + (x * 3) + 1] = g;  // G
+		this->pixels[(y * this->pitch) + (x * 3) + 2] = r;  // R
 	}
 
 
@@ -303,9 +304,9 @@ public:
 		y = clamp(0, y, this->height);
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
 
-		*b = this->pixels[((y * this->width) + x) * 3 + 0];  // B
-		*g = this->pixels[((y * this->width) + x) * 3 + 1];  // G
-		*r = this->pixels[((y * this->width) + x) * 3 + 2];  // R
+		*b = this->pixels[(y * this->pitch) + (x * 3) + 0];  // B
+		*g = this->pixels[(y * this->pitch) + (x * 3) + 1];  // G
+		*r = this->pixels[(y * this->pitch) + (x * 3) + 2];  // R
 	}
 
 	inline char GetR(int x, int y) {
@@ -313,7 +314,7 @@ public:
 		y = clamp(0, y, this->height);
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
 
-		return this->pixels[((y * this->width) + x) * 3 + 2];  // R
+		return this->pixels[(y * this->pitch) + (x * 3) + 2];  // R
 	}
 
 	inline char GetG(int x, int y) {
@@ -321,7 +322,7 @@ public:
 		y = clamp(0, y, this->height);
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
 
-		return this->pixels[((y * this->width) + x) * 3 + 1];  // G
+		return this->pixels[(y * this->pitch) + (x * 3) + 1];  // G
 	}
 
 	inline char GetB(int x, int y) {
@@ -329,7 +330,7 @@ public:
 		y = clamp(0, y, this->height);
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
 
-		return this->pixels[((y * this->width) + x) * 3 + 0];  // B
+		return this->pixels[(y * this->pitch) + (x * 3) + 0];  // B
 	}
 };
 
