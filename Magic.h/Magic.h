@@ -307,6 +307,30 @@ public:
 		*g = this->pixels[((y * this->width) + x) * 3 + 1];  // G
 		*r = this->pixels[((y * this->width) + x) * 3 + 2];  // R
 	}
+
+	inline char GetR(int x, int y) {
+		x = clamp(0, x, this->width);
+		y = clamp(0, y, this->height);
+		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
+
+		return this->pixels[((y * this->width) + x) * 3 + 2];  // R
+	}
+
+	inline char GetG(int x, int y) {
+		x = clamp(0, x, this->width);
+		y = clamp(0, y, this->height);
+		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
+
+		return this->pixels[((y * this->width) + x) * 3 + 1];  // G
+	}
+
+	inline char GetB(int x, int y) {
+		x = clamp(0, x, this->width);
+		y = clamp(0, y, this->height);
+		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
+
+		return this->pixels[((y * this->width) + x) * 3 + 0];  // B
+	}
 };
 
 
@@ -347,6 +371,27 @@ inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
 	*b = pixels[((y * 800) + x) * 3 + 0];  // B
 	*g = pixels[((y * 800) + x) * 3 + 1];  // G
 	*r = pixels[((y * 800) + x) * 3 + 2];  // R
+}
+
+inline char MagicGetR(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return pixels[((y * 800) + x) * 3 + 2];  // R
+}
+
+inline char MagicGetG(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return pixels[((y * 800) + x) * 3 + 1];  // G
+}
+
+inline char MagicGetB(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return pixels[((y * 800) + x) * 3 + 0];  // B
 }
 
 
