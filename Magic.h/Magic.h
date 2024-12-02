@@ -40,6 +40,15 @@ char* pixels;
 
 
 /*
+** Definitions: Screen Size
+*/
+
+
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+
+
+/*
 ** Definitions: Buffer Swapping
 */
 
@@ -207,6 +216,69 @@ void Show(){
 
 
 /*
+** Function: Drawings
+*/
+
+
+void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
+	for (int y = y0; y < y1; y++){
+		for (int x = x0; x < x1; x++){
+			pixels[((y * 800) + x) * 3 + 0] = b;  // B
+			pixels[((y * 800) + x) * 3 + 1] = g;  // G
+			pixels[((y * 800) + x) * 3 + 2] = r;  // R
+		}
+	}
+}
+
+void Clean(char r, char g, char b){
+	Fill(0, 0, 800, 600, r, g, b);
+}
+
+
+inline void MagicSetPixel(int x, int y, char r, char g, char b) {
+	if (x < 0) return;
+	if (y < 0) return;
+	if (x >= 800) return;
+	if (y >= 600) return;
+
+	pixels[((y * 800) + x) * 3 + 0] = b;  // B
+	pixels[((y * 800) + x) * 3 + 1] = g;  // G
+	pixels[((y * 800) + x) * 3 + 2] = r;  // R
+}
+
+
+inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	*b = pixels[((y * 800) + x) * 3 + 0];  // B
+	*g = pixels[((y * 800) + x) * 3 + 1];  // G
+	*r = pixels[((y * 800) + x) * 3 + 2];  // R
+}
+
+inline unsigned char MagicGetR(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return pixels[((y * 800) + x) * 3 + 2];  // R
+}
+
+inline unsigned char MagicGetG(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return pixels[((y * 800) + x) * 3 + 1];  // G
+}
+
+inline unsigned char MagicGetB(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return pixels[((y * 800) + x) * 3 + 0];  // B
+}
+
+
+/*
 ** Functions: Bitmap Loading
 */
 
@@ -282,17 +354,24 @@ public:
 		
 	void Draw(int x_, int y_){
 
-		// Avoid User to Draw Outside the Border
-		x_ = clamp(0, x_, 800 - this->width + 1);
-		y_ = clamp(0, y_, 600 - this->height + 1);
+		int screenStartX = x_;
+		int screenStartY = y_;
+		int screenEndX = x_ + this->width;
+		int screenEndY = y_ + this->height;
 
-		// Fast Fillings
-		for (int y = 0; y < this->height; y++) {
-			for (int x = 0; x < this->width; x++) {
-				int picture_y = this->height - y - 1;  // Picture is Y-Axis Reversed.
-				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 0] = this->pixels[(picture_y * this->pitch) + (x * 3) + 0];
-				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 1] = this->pixels[(picture_y * this->pitch) + (x * 3) + 1];
-				::pixels[(( (y + y_) * 800) + (x + x_) ) * 3 + 2] = this->pixels[(picture_y * this->pitch) + (x * 3) + 2];
+		screenStartX = clamp(0, screenStartX, SCREEN_WIDTH);
+		screenStartY = clamp(0, screenStartY, SCREEN_HEIGHT);
+		screenEndX = clamp(0, screenEndX, SCREEN_WIDTH);
+		screenEndY = clamp(0, screenEndY, SCREEN_HEIGHT);
+
+		for (int y = screenStartY; y < screenEndY; y++){
+			for (int x = screenStartX; x < screenEndX; x++){
+				MagicSetPixel(
+					x, y,
+					this->GetR(x - x_, y - y_),
+					this->GetG(x - x_, y - y_),
+					this->GetB(x - x_, y - y_)
+				);
 			}
 		}
 	}
@@ -344,69 +423,6 @@ public:
 		return this->pixels[(y * this->pitch) + (x * 3) + 0];  // B
 	}
 };
-
-
-/*
-** Function: Drawings
-*/
-
-
-void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
-	for (int y = y0; y < y1; y++){
-		for (int x = x0; x < x1; x++){
-			pixels[((y * 800) + x) * 3 + 0] = b;  // B
-			pixels[((y * 800) + x) * 3 + 1] = g;  // G
-			pixels[((y * 800) + x) * 3 + 2] = r;  // R
-		}
-	}
-}
-
-void Clean(char r, char g, char b){
-	Fill(0, 0, 800, 600, r, g, b);
-}
-
-
-inline void MagicSetPixel(int x, int y, char r, char g, char b) {
-	if (x < 0) return;
-	if (y < 0) return;
-	if (x >= 800) return;
-	if (y >= 600) return;
-
-	pixels[((y * 800) + x) * 3 + 0] = b;  // B
-	pixels[((y * 800) + x) * 3 + 1] = g;  // G
-	pixels[((y * 800) + x) * 3 + 2] = r;  // R
-}
-
-
-inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
-
-	*b = pixels[((y * 800) + x) * 3 + 0];  // B
-	*g = pixels[((y * 800) + x) * 3 + 1];  // G
-	*r = pixels[((y * 800) + x) * 3 + 2];  // R
-}
-
-inline unsigned char MagicGetR(int x, int y) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
-
-	return pixels[((y * 800) + x) * 3 + 2];  // R
-}
-
-inline unsigned char MagicGetG(int x, int y) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
-
-	return pixels[((y * 800) + x) * 3 + 1];  // G
-}
-
-inline unsigned char MagicGetB(int x, int y) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
-
-	return pixels[((y * 800) + x) * 3 + 0];  // B
-}
 
 
 #endif
