@@ -298,8 +298,10 @@ public:
 	}
 
 	inline void SetPixel(int x, int y, char r, char g, char b) {
-		x = clamp(0, x, this->width);
-		y = clamp(0, y, this->height);
+		if (x < 0) return;
+		if (y < 0) return;
+		if (x >= this->width) return;
+		if (y >= this->height) return;
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
 
 		this->pixels[(y * this->pitch) + (x * 3) + 0] = b;  // B
@@ -365,8 +367,10 @@ void Clean(char r, char g, char b){
 
 
 inline void MagicSetPixel(int x, int y, char r, char g, char b) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
+	if (x < 0) return;
+	if (y < 0) return;
+	if (x >= 800) return;
+	if (y >= 600) return;
 
 	pixels[((y * 800) + x) * 3 + 0] = b;  // B
 	pixels[((y * 800) + x) * 3 + 1] = g;  // G
