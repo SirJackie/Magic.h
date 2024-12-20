@@ -16,6 +16,80 @@
 
 ## 2. 窗口相关
 
+### Magic()
+
+启动Magic框架，并创建一个窗口：
+
+```c
+void Magic(int fps = 60);
+```
+
+**参数**
+
+- fps：指定窗口的最大帧率（锁帧），可以不填写，默认为60
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+Magic();  // 一行代码创建窗口
+```
+
+### Quit()
+
+退出Magic框架，并关闭之前创建的窗口：
+
+```c
+void Quit();
+```
+
+**参数**
+
+无
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+Quit();  // 关闭窗口，退出框架
+```
+
+### Show()
+
+刷新窗口，把刚才所有的像素改动显示出来：
+
+```c
+void Show();
+```
+
+> 注意：Magic采用双缓冲架构，确保了稳定性。因为有双缓冲，所以所有的像素改动并不会马上显示到屏幕上，而是要调用 `Show()` 后才会显示。所以您必须在每一帧的绘画结束后，调用 `Show()` 函数。
+
+**参数**
+
+无
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+while (true) {
+	// Draw Something
+	;;;
+	
+	// Update Screen
+	Show();
+}
+```
+
 ### fpsLockRate
 
 一个全局变量，用于设置窗口的最大帧率（锁帧效果）：
@@ -71,7 +145,396 @@ else {
 
 ## 3. 绘制像素
 
+### Fill()
+
+用特定的颜色，填满某个矩形区域：
+
+```c
+void Fill(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b);
+```
+
+**参数**
+
+- x0：矩形左上角的X坐标
+- y0：矩形左上角的Y坐标
+- x1：矩形右下角的X坐标
+- y1：矩形右下角的Y坐标
+- r：颜色的红色分量（取值范围：0-255）
+- g：颜色的绿色分量（取值范围：0-255）
+- b：颜色的蓝色分量（取值范围：0-255）
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+Fill(100, 100, 200, 200, 0, 0, 0);  // 用黑色填满一个 (100, 100) -> (200, 200) 的正方形
+```
+
+### Clean()
+
+用特定的颜色，填满整个窗口：
+
+```c
+void Clean(unsigned char r, unsigned char g, unsigned char b);
+```
+
+**参数**
+
+- r：颜色的红色分量（取值范围：0-255）
+- g：颜色的绿色分量（取值范围：0-255）
+- b：颜色的蓝色分量（取值范围：0-255）
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+Clean(255, 255, 255);  // 用白色填满整个窗口
+```
+
+### MagicSetPixel()
+
+单独设置一个像素的颜色：
+
+```c
+void MagicSetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+- r：颜色的红色分量（取值范围：0-255）
+- g：颜色的绿色分量（取值范围：0-255）
+- b：颜色的蓝色分量（取值范围：0-255）
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+MagicSetPixel(100, 100, 255, 0, 0);  // 设置位于 (100, 100) 的像素的颜色为：红色
+```
+
+### MagicGetPixel()
+
+获取某一个像素的颜色：
+
+```c
+void MagicGetPixel(int x, int y, unsigned char* r, unsigned char* g, unsigned char* b);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+- *r：输出式参数，输出颜色的红色分量（取值范围：0-255）
+- *g：输出式参数，输出颜色的绿色分量（取值范围：0-255）
+- *b：输出式参数，输出颜色的蓝色分量（取值范围：0-255）
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+unsigned char r, g, b;
+MagicGetPixel(100, 100, &r, &g, &b);
+printf("%d %d %d", r, g, b);  // 输出结果：255 255 255
+```
+
+### MagicGetR()
+
+获取某一个像素颜色的红色分量：
+
+```c
+unsigned char MagicGetR(int x, int y);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+
+**返回值**
+
+- unsigned char：输出颜色的红色分量
+
+**示例**
+
+```c
+printf("%d", MagicGetR(100, 100));
+```
+
+### MagicGetG()
+
+获取某一个像素颜色的绿色分量：
+
+```c
+unsigned char MagicGetG(int x, int y);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+
+**返回值**
+
+- unsigned char：输出颜色的绿色分量
+
+**示例**
+
+```c
+printf("%d", MagicGetG(100, 100));
+```
+
+### MagicGetB()
+
+获取某一个像素颜色的蓝色分量：
+
+```c
+unsigned char MagicGetB(int x, int y);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+
+**返回值**
+
+- unsigned char：输出颜色的蓝色分量
+
+**示例**
+
+```c
+printf("%d", MagicGetB(100, 100));
+```
+
 ## 4. 绘制图像
+
+### Picture 类型
+
+Magic框架提供的新数据类型，用于存储一张图片，可以用下面的方式创建：
+
+```c
+Picture picture;
+```
+
+**参数**
+
+无
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+Picture myPicture1;  // 创建第一张图片
+Picture myPicture2;  // 创建第一张图片
+```
+
+### picture.width / picture.height
+
+Picture类型的两个成员变量，用于读取图片的宽度/高度：
+
+```
+picture.width;
+picture.height;
+```
+
+**参数**
+
+无
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+printf("%d %d", myPicture.width, myPicture.height);  // 打印出 myPicture1 的宽度和高度
+```
+
+### picture.Load()
+
+Picture类型的自带函数，用于从文件中加载图片（仅支持加载BMP格式的图片文件）：
+
+```c
+void Picture::Load(const char* filename);
+```
+
+**参数**
+
+- filename：一个字符串，用于指定BMP文件的路径
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+myPicture.Load(".\\BMP\\hamster.bmp");  // 将 hamster.bmp 文件加载到 myPicture 中，为后续使用
+```
+
+### picture.Draw()
+
+Picture类型的自带函数，用于把图片绘制到屏幕上：
+
+```c
+void Picture::Draw(int x_, int y_);
+```
+
+**参数**
+
+- x_：要绘制的位置，左上角的X坐标
+- y_：要绘制的位置，左上角的X坐标
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+myPicture.Draw(200, 200);  // 将 myPicture 图片绘制到屏幕上 (200, 200) 的位置
+```
+
+### picture.SetPixel()
+
+单独设置一个像素的颜色：
+
+```c
+void Picture::SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+- r：颜色的红色分量（取值范围：0-255）
+- g：颜色的绿色分量（取值范围：0-255）
+- b：颜色的蓝色分量（取值范围：0-255）
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+myPicture.SetPixel(100, 100, 255, 0, 0);  // 设置位于 (100, 100) 的像素的颜色为：红色
+```
+
+### picture.GetPixel()
+
+获取某一个像素的颜色：
+
+```c
+void Picture::GetPixel(int x, int y, unsigned char* r, unsigned char* g, unsigned char* b);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+- *r：输出式参数，输出颜色的红色分量（取值范围：0-255）
+- *g：输出式参数，输出颜色的绿色分量（取值范围：0-255）
+- *b：输出式参数，输出颜色的蓝色分量（取值范围：0-255）
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+unsigned char r, g, b;
+myPicture.GetPixel(100, 100, &r, &g, &b);
+printf("%d %d %d", r, g, b);  // 输出结果：255 255 255
+```
+
+### picture.GetR()
+
+获取某一个像素颜色的红色分量：
+
+```c
+unsigned char Picture::GetR(int x, int y);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+
+**返回值**
+
+- unsigned char：输出颜色的红色分量
+
+**示例**
+
+```c
+printf("%d", myPicture.GetR(100, 100));
+```
+
+### picture.GetG()
+
+获取某一个像素颜色的绿色分量：
+
+```c
+unsigned char Picture::GetG(int x, int y);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+
+**返回值**
+
+- unsigned char：输出颜色的绿色分量
+
+**示例**
+
+```c
+printf("%d", myPicture.GetG(100, 100));
+```
+
+### picture.GetB()
+
+获取某一个像素颜色的蓝色分量：
+
+```c
+unsigned char Picture::GetB(int x, int y);
+```
+
+**参数**
+
+- x：像素的X坐标
+- y：像素的Y坐标
+
+**返回值**
+
+- unsigned char：输出颜色的蓝色分量
+
+**示例**
+
+```c
+printf("%d", myPicture.GetB(100, 100));
+```
 
 ## 5. 键盘鼠标检测
 
