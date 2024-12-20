@@ -8,83 +8,19 @@
 #include <process.h>
 
 
-/*
-** Compiler Specific
-*/
-
-
-// MSVC Compiler WChar Feature Compatibility.
-#if defined(_MSC_VER)
-#define PIPE_NAME TEXT("MagicDotHBuffer")
-#else
-#define PIPE_NAME ("MagicDotHBuffer")
-#endif
-
-
-/*
-** Fast Inline Functions
-*/
-
-
-#define clamp(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal-1))? (maxVal-1) : (value)))
-
-
-/*
-** Definitions: Buffer
-*/
-
-
-HANDLE  hMapFile;
-LPCTSTR pBuf;
-char* pixels;
-
-
-/*
-** Definitions: Screen Size
-*/
-
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-
-
-/*
-** Definitions: Buffer Swapping
-*/
-
-
-#define PAGE_LENGTH 1440000  // (800 x 600 x 3) bytes
-#define SIGN_LENGTH 8192
-#define PIPE_LENGTH (SIGN_LENGTH+2*PAGE_LENGTH)
-int bufferDelta = SIGN_LENGTH;
-
-
-/*
-** Definitions: Pipe Signal Transfer
-*/
-
-
-#define exitSignal   (((char*)pBuf)[ 0])  // [ 0]
-#define swapSignal   (((char*)pBuf)[ 1])  // [ 1]
-#define gotitSignal  (((char*)pBuf)[ 2])  // [ 2]
-#define fpsLockRate  (((int* )pBuf)[ 3])  // [ 3] [ 4] [ 5] [ 6]
-#define isWinFocus   (((char*)pBuf)[ 7])  // [ 7]
-
-#define mouseX       (((int* )pBuf)[ 8])  // [ 8] [ 9] [10] [11]
-#define mouseY       (((int* )pBuf)[12])  // [12] [13] [14] [15]
-#define isLeftClick  (((char*)pBuf)[16])  // [16]
-#define isRightClick (((char*)pBuf)[17])  // [17]
-
-#define keyboard     (((char*)pBuf) +18)  // [18] [19] ... [273]
-
-
-/*
-** Definitions: Bitmap Loading
-*/
+/**
+ * @section
+ * Struct Definitions
+ */
 
 
 // Disable Memory Alignment for Struct
 #pragma pack(push, 1)
+
+/**
+ * @brief: struct BMPHeader for internal bitmap loading purposes.
+ * @SHOULD NOT BE CALLED BY USERS!
+ */
 
 typedef struct {
 	char     type[2];
@@ -92,6 +28,11 @@ typedef struct {
 	unsigned short int  reserved1, reserved2;
 	unsigned int  offset;
 } BMPHeader;
+
+/**
+ * @brief: struct BMPInfoHeader for internal bitmap loading purposes.
+ * @SHOULD NOT BE CALLED BY USERS!
+ */
 
 typedef struct {
 	unsigned int  size;
@@ -109,182 +50,79 @@ typedef struct {
 #pragma pack(pop)
 
 
-/*
-** Functions: Bitmap Loading
-*/
+/**
+ * @section
+ * Global Definitions
+ */
 
 
-void Magic(int fps = 60){
-
-	/*
-	** --------------------------------------------------
-	** Initialize Shared Memory
-	** --------------------------------------------------
-	*/
-
-	// Create Shared Memory
-	hMapFile = CreateFileMapping(
-		INVALID_HANDLE_VALUE,   // Use the system paging file
-		NULL,                   // Default Security
-		PAGE_READWRITE,         // Read and write permissions
-		0,                      // Max Obj Size's HIGHER 32 Bits
-		PIPE_LENGTH,            // Max Obj Size's LOWER 32 Bits, aka PIPE SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
-		PIPE_NAME               // NAME of Shared Memory
-	);
-	if (hMapFile == NULL) {
-		GetLastError();  // Error Code.
-	}
-
-	// Map Up the Shared Memory
-	pBuf = (LPTSTR) MapViewOfFile(
-		hMapFile,               // HANDLE of Shared Memory
-		FILE_MAP_ALL_ACCESS,    // Write Permission
-		0,                      // Mapping Offset
-		0,                      // Mapping Offset
-		PIPE_LENGTH             // Mapping SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
-	);
-
-	if (pBuf == NULL) {
-		GetLastError();  // Error Code.
-		CloseHandle(hMapFile);
-	}
-
-	// Initialize Pixels Buffer Pointer
-	pixels = ((char*)pBuf + bufferDelta);
-
-	/*
-	** --------------------------------------------------
-	** Initialize Pipe Signals
-	** --------------------------------------------------
-	*/
-
-	exitSignal  = (unsigned char) 0;
-	swapSignal  = (unsigned char) 0;
-	gotitSignal = (unsigned char) 0;
-	fpsLockRate = (int) fps;
-
-	/*
-	** --------------------------------------------------
-	** Initialize MagicHost.exe
-	** --------------------------------------------------
-	*/
-
-	system("start MagicHost.exe");
-}
-
-
-void Quit(){
-	/*
-	** --------------------------------------------------
-	** Finalize Shared Memory
-	** --------------------------------------------------
-	*/
-
-	// Sending Exit Signal
-	exitSignal = (unsigned char) 1;
-	while(gotitSignal != 1);  // Wait Until Exiting Finished.
-	gotitSignal = (unsigned char) 0;
-
-	// Delete Shared Memory
-	UnmapViewOfFile(pBuf);
-	CloseHandle(hMapFile);
-}
-
-// DISABLE MSVC OPEIMIZATION: START
+// MSVC Compiler WChar Feature Compatibility.
 #if defined(_MSC_VER)
-#pragma optimize( "", off )
+#define G_PIPE_NAME TEXT("MagicDotHBuffer")
+#else
+#define G_PIPE_NAME ("MagicDotHBuffer")
 #endif
 
-void Show(){
-	// Swapping Buffers
-	bufferDelta = bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
-	swapSignal = (unsigned char) 1;
+// Screen Size
+#define G_SCREEN_WIDTH 800
+#define G_SCREEN_HEIGHT 600
 
-	// You MUST DISABLE MSVC OPEIMIZATION in Order to Make the Following Line Work.
-	while(gotitSignal != 1);  // Wait Until Pushing Finished.
-	
-	gotitSignal = (unsigned char) 0;
+// Process Pipe Offsets
+#define PAGE_LENGTH 1440000  // (800 x 600 x 3) bytes
+#define SIGN_LENGTH 8192
+#define PIPE_LENGTH (SIGN_LENGTH+2*PAGE_LENGTH)
 
-	// Update Pixels Buffer Pointer
-	pixels = ((char*)pBuf + bufferDelta);
-}
-
-// DISABLE MSVC OPEIMIZATION: END
-#if defined(_MSC_VER)
-#pragma optimize( "", on )
-#endif
+// Internal Pipe Signals, SHOULD NOT BE MODIFIED BY USERS!
+#define exitSignal   (((char*)G_pBuf)[ 0])  // [ 0]
+#define swapSignal   (((char*)G_pBuf)[ 1])  // [ 1]
+#define gotitSignal  (((char*)G_pBuf)[ 2])  // [ 2]
 
 
-/*
-** Function: Drawings
-*/
+/**
+ * @section
+ * Global Variables
+ */
 
 
-void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
-	for (int y = y0; y < y1; y++){
-		for (int x = x0; x < x1; x++){
-			pixels[((y * 800) + x) * 3 + 0] = b;  // B
-			pixels[((y * 800) + x) * 3 + 1] = g;  // G
-			pixels[((y * 800) + x) * 3 + 2] = r;  // R
-		}
-	}
-}
+// Win32 API Related
+HANDLE  G_hMapFile;
+LPCTSTR G_pBuf;
+char* G_pixels;
 
-void Clean(char r, char g, char b){
-	Fill(0, 0, 800, 600, r, g, b);
-}
+// Process Pipe Offset
+int G_bufferDelta = SIGN_LENGTH;
 
 
-inline void MagicSetPixel(int x, int y, char r, char g, char b) {
-	if (x < 0) return;
-	if (y < 0) return;
-	if (x >= 800) return;
-	if (y >= 600) return;
-
-	pixels[((y * 800) + x) * 3 + 0] = b;  // B
-	pixels[((y * 800) + x) * 3 + 1] = g;  // G
-	pixels[((y * 800) + x) * 3 + 2] = r;  // R
-}
+/**
+ * @section
+ * Internal Functions, SHOULD NOT BE CALLED BY USERS!
+ */
 
 
-inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
+/**
+ * @brief: Make sure min <= value < max. (including left but not including right)
+ * @param minVal: Minimum value for clampping.
+ * @param value: The value to clamp.
+ * @param maxVal: Maximum value for clampping.
+ * @return _T: The result of clampped value.
+ */
 
-	*b = pixels[((y * 800) + x) * 3 + 0];  // B
-	*g = pixels[((y * 800) + x) * 3 + 1];  // G
-	*r = pixels[((y * 800) + x) * 3 + 2];  // R
-}
+#define clamp(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal-1))? (maxVal-1) : (value)))
 
-inline unsigned char MagicGetR(int x, int y) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
+/**
+ * @brief: Internal bitmap loading function, not encapsulated by the Picture class.
+ * @SHOULD NOT BE CALLED BY USERS!
+ * @param *filename: a C-String describing the filename of the bitmap.
+ * @param *width: Output parameter, outputting the width of the loaded bitmap.
+ * @param *height: Output parameter, outputting the height of the loaded bitmap.
+ * @param *pitch: Output parameter, outputting the pitch of the loaded bitmap.
+ *                Pitch refers to the offset when advecting through each row.
+ * @param **image_data_ptr: Output parameter, outputting the loaded pixel results.
+ * @return void
+ */
 
-	return pixels[((y * 800) + x) * 3 + 2];  // R
-}
-
-inline unsigned char MagicGetG(int x, int y) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
-
-	return pixels[((y * 800) + x) * 3 + 1];  // G
-}
-
-inline unsigned char MagicGetB(int x, int y) {
-	x = clamp(0, x, 800);
-	y = clamp(0, y, 600);
-
-	return pixels[((y * 800) + x) * 3 + 0];  // B
-}
-
-
-/*
-** Functions: Bitmap Loading
-*/
-
-
-void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned char** image_data_ptr){
-	FILE *file;
+void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned char** image_data_ptr) {
+	FILE* file;
 	BMPHeader header;
 	BMPInfoHeader info_header;
 
@@ -313,7 +151,7 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	}
 
 	// Allocate Memory for Image Storage
-	(*image_data_ptr) = (unsigned char *)malloc(info_header.image_size);
+	(*image_data_ptr) = (unsigned char*)malloc(info_header.image_size);
 	if (!(*image_data_ptr)) {
 		perror("Error allocating memory");
 		fclose(file);
@@ -338,9 +176,264 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 }
 
 
-/*
-** Class: Picture Class
-*/
+// --------------------------------------------------
+// --------------------------------------------------
+// --------------------------------------------------
+// --------------------------------------------------
+// --------------------------------------------------
+
+
+/**
+ * @section
+ * User API Definitions
+ */
+
+#define fpsLockRate  (((int* )G_pBuf)[ 3])  // [ 3] [ 4] [ 5] [ 6]
+#define isWinFocus   (((char*)G_pBuf)[ 7])  // [ 7]
+
+#define mouseX       (((int* )G_pBuf)[ 8])  // [ 8] [ 9] [10] [11]
+#define mouseY       (((int* )G_pBuf)[12])  // [12] [13] [14] [15]
+#define isLeftClick  (((char*)G_pBuf)[16])  // [16]
+#define isRightClick (((char*)G_pBuf)[17])  // [17]
+
+#define keyboard     (((char*)G_pBuf) +18)  // [18] [19] ... [273]
+
+
+/**
+ * @section
+ * User API Functions
+ */
+
+
+/**
+ * @brief: Initialize the Magic Framework, which creates a window to draw.
+ * @param fps=60: The locked framerate of FPS, defaultly set to 60, can be modified.
+ * @return void
+ */
+
+void Magic(int fps = 60){
+
+	//
+	// Initialize Shared Memory
+	//
+
+	// Create Shared Memory
+	G_hMapFile = CreateFileMapping(
+		INVALID_HANDLE_VALUE,   // Use the system paging file
+		NULL,                   // Default Security
+		PAGE_READWRITE,         // Read and write permissions
+		0,                      // Max Obj Size's HIGHER 32 Bits
+		PIPE_LENGTH,            // Max Obj Size's LOWER 32 Bits, aka PIPE SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
+		G_PIPE_NAME               // NAME of Shared Memory
+	);
+	if (G_hMapFile == NULL) {
+		GetLastError();  // Error Code.
+	}
+
+	// Map Up the Shared Memory
+	G_pBuf = (LPTSTR) MapViewOfFile(
+		G_hMapFile,               // HANDLE of Shared Memory
+		FILE_MAP_ALL_ACCESS,    // Write Permission
+		0,                      // Mapping Offset
+		0,                      // Mapping Offset
+		PIPE_LENGTH             // Mapping SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
+	);
+
+	if (G_pBuf == NULL) {
+		GetLastError();  // Error Code.
+		CloseHandle(G_hMapFile);
+	}
+
+	// Initialize Pixels Buffer Pointer
+	G_pixels = ((char*)G_pBuf + G_bufferDelta);
+
+	//
+	// Initialize Pipe Signals
+	//
+
+	exitSignal  = (unsigned char) 0;
+	swapSignal  = (unsigned char) 0;
+	gotitSignal = (unsigned char) 0;
+	fpsLockRate = (int) fps;
+
+	//
+	// Initialize MagicHost.exe
+	//
+
+	system("start MagicHost.exe");
+}
+
+/**
+ * @brief: Finalize the Magic Framework, which turns off the window.
+ * @return void
+ */
+
+void Quit(){
+
+	//
+	// Finalize Shared Memory
+	//
+
+	// Sending Exit Signal
+	exitSignal = (unsigned char) 1;
+	while(gotitSignal != 1);  // Wait Until Exiting Finished.
+	gotitSignal = (unsigned char) 0;
+
+	// Delete Shared Memory
+	UnmapViewOfFile(G_pBuf);
+	CloseHandle(G_hMapFile);
+}
+
+// DISABLE MSVC OPEIMIZATION for Show() Function: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+/**
+ * @brief: Push the Back Buffer to the Front Buffer, which shows newly drawn pixels.
+ * @return void
+ */
+
+void Show(){
+	// Swapping Buffers
+	G_bufferDelta = G_bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
+	swapSignal = (unsigned char) 1;
+
+	// You MUST DISABLE MSVC OPEIMIZATION in Order to Make the Following Line Work.
+	while(gotitSignal != 1);  // Wait Until Pushing Finished.
+
+	gotitSignal = (unsigned char) 0;
+
+	// Update Pixels Buffer Pointer
+	G_pixels = ((char*)G_pBuf + G_bufferDelta);
+}
+
+// DISABLE MSVC OPEIMIZATION for Show() Function: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+/**
+ * @brief: Fill a specific rectangle with a color.
+ * @param x0: The x coordinate of the up-left corner of the rectangle.
+ * @param y0: The y coordinate of the up-left corner of the rectangle.
+ * @param x1: The x coordinate of the down-right corner of the rectangle.
+ * @param y1: The y coordinate of the down-right corner of the rectangle.
+ * @param r: The red channel of the filling color.
+ * @param g: The green channel of the filling color.
+ * @param b: The blue channel of the filling color.
+ * @return void
+ */
+
+void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
+	for (int y = y0; y < y1; y++){
+		for (int x = x0; x < x1; x++){
+			G_pixels[((y * 800) + x) * 3 + 0] = b;  // B
+			G_pixels[((y * 800) + x) * 3 + 1] = g;  // G
+			G_pixels[((y * 800) + x) * 3 + 2] = r;  // R
+		}
+	}
+}
+
+/**
+ * @brief: Clean the whole screen with a specific color.
+ * @param r: The red channel of the filling color.
+ * @param g: The green channel of the filling color.
+ * @param b: The blue channel of the filling color.
+ * @return void
+ */
+
+void Clean(char r, char g, char b){
+	Fill(0, 0, 800, 600, r, g, b);
+}
+
+/**
+ * @brief: Set the color of a specific pixel.
+ * @param x: The x coordinate of the specific pixel.
+ * @param y: The y coordinate of the specific pixel.
+ * @param r: The red channel of the pixel color.
+ * @param g: The green channel of the pixel color.
+ * @param b: The blue channel of the pixel color.
+ * @return void
+ */
+
+inline void MagicSetPixel(int x, int y, char r, char g, char b) {
+	if (x < 0) return;
+	if (y < 0) return;
+	if (x >= 800) return;
+	if (y >= 600) return;
+
+	G_pixels[((y * 800) + x) * 3 + 0] = b;  // B
+	G_pixels[((y * 800) + x) * 3 + 1] = g;  // G
+	G_pixels[((y * 800) + x) * 3 + 2] = r;  // R
+}
+
+/**
+ * @brief: Get the color of a specific pixel.
+ * @param x: The x coordinate of the specific pixel.
+ * @param y: The y coordinate of the specific pixel.
+ * @param *r: Output parameter, returns the red channel of the pixel color.
+ * @param *g: Output parameter, returns the green channel of the pixel color.
+ * @param *b: Output parameter, returns the blue channel of the pixel color.
+ * @return void
+ */
+
+inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	*b = G_pixels[((y * 800) + x) * 3 + 0];  // B
+	*g = G_pixels[((y * 800) + x) * 3 + 1];  // G
+	*r = G_pixels[((y * 800) + x) * 3 + 2];  // R
+}
+
+/**
+ * @brief: Get the red channel of the color of a specific pixel.
+ * @param x: The x coordinate of the specific pixel.
+ * @param y: The y coordinate of the specific pixel.
+ * @return unsigned char: The red channel of the pixel color.
+ */
+
+inline unsigned char MagicGetR(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return G_pixels[((y * 800) + x) * 3 + 2];  // R
+}
+
+/**
+ * @brief: Get the green channel of the color of a specific pixel.
+ * @param x: The x coordinate of the specific pixel.
+ * @param y: The y coordinate of the specific pixel.
+ * @return unsigned char: The green channel of the pixel color.
+ */
+
+inline unsigned char MagicGetG(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return G_pixels[((y * 800) + x) * 3 + 1];  // G
+}
+
+/**
+ * @brief: Get the blue channel of the color of a specific pixel.
+ * @param x: The x coordinate of the specific pixel.
+ * @param y: The y coordinate of the specific pixel.
+ * @return unsigned char: The blue channel of the pixel color.
+ */
+
+inline unsigned char MagicGetB(int x, int y) {
+	x = clamp(0, x, 800);
+	y = clamp(0, y, 600);
+
+	return G_pixels[((y * 800) + x) * 3 + 0];  // B
+}
+
+
+/**
+ * @section
+ * Picture Loading Class
+ */
 
 
 class Picture{
@@ -348,10 +441,24 @@ public:
 	int width, height, pitch;
 	unsigned char* pixels;
 
+	/**
+	 * @brief: Load picture pixels from a file.
+	 * @param filename: The filename of the file.
+	 * @return void
+	 */
+
 	void Load(const char* filename){
 		LoadBMP(filename, &width, &height, &pitch, &pixels);
 	}
-		
+
+	/**
+	 * @brief: Draw this picture in the position (x, y) on the screen.
+	 *         Support boundary clipping, can safely drawn on any position.
+	 * @param x_: The x coordinate of the drawing position.
+	 * @param y_: The x coordinate of the drawing position.
+	 * @return void
+	 */
+
 	void Draw(int x_, int y_){
 
 		int screenStartX = x_;
@@ -359,10 +466,10 @@ public:
 		int screenEndX = x_ + this->width;
 		int screenEndY = y_ + this->height;
 
-		screenStartX = clamp(0, screenStartX, SCREEN_WIDTH);
-		screenStartY = clamp(0, screenStartY, SCREEN_HEIGHT);
-		screenEndX = clamp(0, screenEndX, SCREEN_WIDTH);
-		screenEndY = clamp(0, screenEndY, SCREEN_HEIGHT);
+		screenStartX = clamp(0, screenStartX, G_SCREEN_WIDTH);
+		screenStartY = clamp(0, screenStartY, G_SCREEN_HEIGHT);
+		screenEndX = clamp(0, screenEndX, G_SCREEN_WIDTH);
+		screenEndY = clamp(0, screenEndY, G_SCREEN_HEIGHT);
 
 		for (int y = screenStartY; y < screenEndY; y++){
 			for (int x = screenStartX; x < screenEndX; x++){
@@ -376,6 +483,16 @@ public:
 		}
 	}
 
+	/**
+	 * @brief: Set the color of a specific pixel IN THIS PICTURE.
+	 * @param x: The x coordinate of the specific pixel.
+	 * @param y: The y coordinate of the specific pixel.
+	 * @param r: The red channel of the pixel color.
+	 * @param g: The green channel of the pixel color.
+	 * @param b: The blue channel of the pixel color.
+	 * @return void
+	 */
+
 	inline void SetPixel(int x, int y, char r, char g, char b) {
 		if (x < 0) return;
 		if (y < 0) return;
@@ -388,6 +505,15 @@ public:
 		this->pixels[(y * this->pitch) + (x * 3) + 2] = r;  // R
 	}
 
+	/**
+	 * @brief: Get the color of a specific pixel IN THIS PICTURE.
+	 * @param x: The x coordinate of the specific pixel.
+	 * @param y: The y coordinate of the specific pixel.
+	 * @param *r: Output parameter, returns the red channel of the pixel color.
+	 * @param *g: Output parameter, returns the green channel of the pixel color.
+	 * @param *b: Output parameter, returns the blue channel of the pixel color.
+	 * @return void
+	 */
 
 	inline void GetPixel(int x, int y, char* r, char* g, char* b) {
 		x = clamp(0, x, this->width);
@@ -399,6 +525,13 @@ public:
 		*r = this->pixels[(y * this->pitch) + (x * 3) + 2];  // R
 	}
 
+	/**
+	 * @brief: Get the red channel of the color of a specific pixel IN THIS PICTURE.
+	 * @param x: The x coordinate of the specific pixel.
+	 * @param y: The y coordinate of the specific pixel.
+	 * @return unsigned char: The red channel of the pixel color.
+	 */
+
 	inline unsigned char GetR(int x, int y) {
 		x = clamp(0, x, this->width);
 		y = clamp(0, y, this->height);
@@ -407,6 +540,13 @@ public:
 		return this->pixels[(y * this->pitch) + (x * 3) + 2];  // R
 	}
 
+	/**
+	 * @brief: Get the green channel of the color of a specific pixel IN THIS PICTURE.
+	 * @param x: The x coordinate of the specific pixel.
+	 * @param y: The y coordinate of the specific pixel.
+	 * @return unsigned char: The green channel of the pixel color.
+	 */
+
 	inline unsigned char GetG(int x, int y) {
 		x = clamp(0, x, this->width);
 		y = clamp(0, y, this->height);
@@ -414,6 +554,13 @@ public:
 
 		return this->pixels[(y * this->pitch) + (x * 3) + 1];  // G
 	}
+
+	/**
+	 * @brief: Get the blue channel of the color of a specific pixel IN THIS PICTURE.
+	 * @param x: The x coordinate of the specific pixel.
+	 * @param y: The y coordinate of the specific pixel.
+	 * @return unsigned char: The blue channel of the pixel color.
+	 */
 
 	inline unsigned char GetB(int x, int y) {
 		x = clamp(0, x, this->width);
@@ -424,6 +571,4 @@ public:
 	}
 };
 
-
 #endif
-
