@@ -16,7 +16,7 @@
 
 ## 2. 窗口相关
 
-### `fpsLockRate`
+### fpsLockRate
 
 一个全局变量，用于设置窗口的最大帧率（锁帧效果）：
 
@@ -40,7 +40,7 @@ int fpsLockRate;
 fpsLockRate = 120;  // 修改后自动生效
 ```
 
-### `isWinFocus`
+### isWinFocus
 
 一个全局变量，用于读取窗口是否处于焦点状态（也就是用户是否在使用这个窗口）：
 
@@ -75,7 +75,7 @@ else {
 
 ## 5. 键盘鼠标检测
 
-### `mouseX / mouseY`
+### mouseX / mouseY
 
 两个全局变量，用于读取鼠标的X和Y坐标：
 
@@ -100,7 +100,7 @@ int mouseY;
 printf("%d %d", mouseX, mouseY);  // 输出：155 263
 ```
 
-### `isLeftClick / isRightClick`
+### isLeftClick / isRightClick
 
 两个全局变量，用于读取鼠标的左键/右键是否被点击。
 
@@ -133,7 +133,7 @@ if (isRightClick) {
 }
 ```
 
-### `keyboard`
+### keyboard
 
 一个全局数组变量，用于读取键盘的任何一个键，是否被点击。
 
@@ -149,7 +149,7 @@ char keyboard[256];
 
 - 对于英文字母，例如A键：可以通过 `keyboard['A']` 来获得按键状态
 
-  > 注意：``keyboard['A']` 必须大写，`keyboard['a']` 不行
+  > 注意：`keyboard['A']` 必须大写，`keyboard['a']` 不行
 
 - 对于阿拉伯数字，例如3键：可以通过 `keyboard['3']` 来获得按键状态
 
