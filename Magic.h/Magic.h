@@ -87,7 +87,7 @@ typedef struct {
 // Win32 API Related
 HANDLE  G_hMapFile;
 LPCTSTR G_pBuf;
-char* G_pixels;
+unsigned char* G_pixels;
 
 // Process Pipe Offset
 int G_bufferDelta = SIGN_LENGTH;
@@ -245,7 +245,7 @@ void Magic(int fps = 60){
 	}
 
 	// Initialize Pixels Buffer Pointer
-	G_pixels = ((char*)G_pBuf + G_bufferDelta);
+	G_pixels = ((unsigned char*)G_pBuf + G_bufferDelta);
 
 	//
 	// Initialize Pipe Signals
@@ -305,7 +305,7 @@ void Show(){
 	gotitSignal = (unsigned char) 0;
 
 	// Update Pixels Buffer Pointer
-	G_pixels = ((char*)G_pBuf + G_bufferDelta);
+	G_pixels = ((unsigned char*)G_pBuf + G_bufferDelta);
 }
 
 // DISABLE MSVC OPEIMIZATION for Show() Function: END
@@ -325,7 +325,7 @@ void Show(){
  * @return void
  */
 
-void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
+void Fill(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b){
 	for (int y = y0; y < y1; y++){
 		for (int x = x0; x < x1; x++){
 			G_pixels[((y * 800) + x) * 3 + 0] = b;  // B
@@ -343,7 +343,7 @@ void Fill(int x0, int y0, int x1, int y1, char r, char g, char b){
  * @return void
  */
 
-void Clean(char r, char g, char b){
+void Clean(unsigned char r, unsigned char g, unsigned char b){
 	Fill(0, 0, 800, 600, r, g, b);
 }
 
@@ -357,7 +357,7 @@ void Clean(char r, char g, char b){
  * @return void
  */
 
-inline void MagicSetPixel(int x, int y, char r, char g, char b) {
+inline void MagicSetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 	if (x < 0) return;
 	if (y < 0) return;
 	if (x >= 800) return;
@@ -378,7 +378,7 @@ inline void MagicSetPixel(int x, int y, char r, char g, char b) {
  * @return void
  */
 
-inline void MagicGetPixel(int x, int y, char* r, char* g, char* b) {
+inline void MagicGetPixel(int x, int y, unsigned char* r, unsigned char* g, unsigned char* b) {
 	x = clamp(0, x, 800);
 	y = clamp(0, y, 600);
 
@@ -493,7 +493,7 @@ public:
 	 * @return void
 	 */
 
-	inline void SetPixel(int x, int y, char r, char g, char b) {
+	inline void SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 		if (x < 0) return;
 		if (y < 0) return;
 		if (x >= this->width) return;
@@ -515,7 +515,7 @@ public:
 	 * @return void
 	 */
 
-	inline void GetPixel(int x, int y, char* r, char* g, char* b) {
+	inline void GetPixel(int x, int y, unsigned char* r, unsigned char* g, unsigned char* b) {
 		x = clamp(0, x, this->width);
 		y = clamp(0, y, this->height);
 		y = this->height - y - 1;  // Picture is Y-Axis Reversed.
