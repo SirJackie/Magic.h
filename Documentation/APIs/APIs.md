@@ -420,10 +420,10 @@ myPicture.Draw(200, 200);  // 将 myPicture 图片绘制到屏幕上 (200, 200) 
 
 ### picture.DrawZoom()
 
-Picture类型的自带函数，用于按照比例，把将图片添加缩放效果，然后绘制到屏幕上：
+Picture类型的自带函数，用于按照比例，将图片添加缩放效果，然后绘制到屏幕上：
 
 ```c
-void DrawZoom(int x_, int y_, float ratio);
+void Picture::DrawZoom(int x_, int y_, float ratio);
 ```
 
 **参数**
@@ -450,12 +450,12 @@ myPicture.DrawZoom(200, 200, 0.75f);  // 将 myPicture 图片缩放到0.75倍，
 
 ### picture.DrawZoomCentered()
 
-Picture类型的自带函数，用于按照比例，把将图片添加缩放效果，然后绘制到屏幕上：
+Picture类型的自带函数，用于按照比例，将图片添加缩放效果，然后绘制到屏幕上：
 
 与 `picture.DrawZoom()` 不同的是，该函数以图片的**中心点**作为缩放的中心点。
 
 ```c
-void DrawZoomCentered(int x_, int y_, float ratio);
+void Picture::DrawZoomCentered(int x_, int y_, float ratio);
 ```
 
 **参数**
@@ -482,10 +482,10 @@ myPicture.DrawZoomCentered(200, 200, 0.75f);  // 将 myPicture 图片缩放到0.
 
 ### picture.DrawBrightness()
 
-Picture类型的自带函数，用于按照亮度值，把将图片添加亮度变化，然后绘制到屏幕上：
+Picture类型的自带函数，用于按照亮度值，将图片添加亮度变化，然后绘制到屏幕上：
 
 ```c
-void DrawBrightness(int x_, int y_, float brightness);
+void Picture::DrawBrightness(int x_, int y_, float brightness);
 ```
 
 **参数**
