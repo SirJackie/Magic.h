@@ -480,6 +480,35 @@ void DrawZoomCentered(int x_, int y_, float ratio);
 myPicture.DrawZoomCentered(200, 200, 0.75f);  // 将 myPicture 图片缩放到0.75倍，绘制在屏幕上
 ```
 
+### picture.DrawBrightness()
+
+Picture类型的自带函数，用于按照亮度值，把将图片添加亮度变化，然后绘制到屏幕上：
+
+```c
+void DrawBrightness(int x_, int y_, float brightness);
+```
+
+**参数**
+
+- x_：要绘制的位置，左上角的X坐标
+- y_：要绘制的位置，左上角的X坐标
+- brightness：亮度值；取值范围：`[0.0f, 正无穷]`
+
+**返回值**
+
+无
+
+**特性**
+
+- 支持边界裁剪，可以安全的在任意超出屏幕的XY坐标上绘制，而不会发生崩溃问题
+- 支持透明绘制，会自动将RGB值为 `(255, 0, 255)` 的像素识别为透明，跳过绘制透明像素
+
+**示例**
+
+```c
+myPicture.DrawBrightness(200, 200, 0.5f);  // 将 myPicture 图片亮度调为0.5，绘制在屏幕上
+```
+
 ### picture.SetPixel()
 
 单独设置一个像素的颜色：

@@ -565,6 +565,55 @@ public:
 	}
 
 	/**
+	 * @brief: Draw this picture in the position (x, y) on the screen,
+	 *         With a brightness value in range [0.0f, Infinity]
+	 *         to control how bright the image should be drawn.
+	 * @param x_: The x coordinate of the drawing position.
+	 * @param y_: The x coordinate of the drawing position.
+	 * @param brightness: The brightness value, in range [0.0f, Infinity].
+	 * @return void
+	 */
+
+	void DrawBrightness(int x_, int y_, float brightness) {
+
+		int screenStartX = x_;
+		int screenStartY = y_;
+		int screenEndX = x_ + this->width;
+		int screenEndY = y_ + this->height;
+
+		screenStartX = clamp(0, screenStartX, G_SCREEN_WIDTH);
+		screenStartY = clamp(0, screenStartY, G_SCREEN_HEIGHT);
+		screenEndX = clamp(0, screenEndX, G_SCREEN_WIDTH);
+		screenEndY = clamp(0, screenEndY, G_SCREEN_HEIGHT);
+
+		unsigned char ri, gi, bi;
+
+		for (int y = screenStartY; y < screenEndY; y++) {
+			for (int x = screenStartX; x < screenEndX; x++) {
+
+				ri = this->GetR(x - x_, y - y_);
+				gi = this->GetG(x - x_, y - y_);
+				bi = this->GetB(x - x_, y - y_);
+
+				if (ri == 255 && gi == 0 && bi == 255) {
+					// Pink, Transparent, Do Not Draw.
+					continue;
+				}
+
+				ri = int(ri * brightness);
+				gi = int(gi * brightness);
+				bi = int(bi * brightness);
+
+				ri = clamp(0, ri, 256);
+				gi = clamp(0, gi, 256);
+				bi = clamp(0, bi, 256);
+
+				MagicSetPixel(x, y, ri, gi, bi);
+			}
+		}
+	}
+
+	/**
 	 * @brief: Set the color of a specific pixel IN THIS PICTURE.
 	 * @param x: The x coordinate of the specific pixel.
 	 * @param y: The y coordinate of the specific pixel.
