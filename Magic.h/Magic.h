@@ -448,6 +448,11 @@ public:
 	int width, height, pitch;
 	unsigned char* pixels;
 
+	~Picture() {
+		free((void*)pixels);
+		pixels = nullptr;
+	}
+
 	/**
 	 * @brief: Load picture pixels from a file.
 	 * @param filename: The filename of the file.
