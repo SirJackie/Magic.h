@@ -448,6 +448,38 @@ void DrawZoom(int x_, int y_, float ratio);
 myPicture.DrawZoom(200, 200, 0.75f);  // 将 myPicture 图片缩放到0.75倍，绘制在屏幕上
 ```
 
+### picture.DrawZoomCentered()
+
+Picture类型的自带函数，用于按照比例，把将图片添加缩放效果，然后绘制到屏幕上：
+
+与 `picture.DrawZoom()` 不同的是，该函数以图片的**中心点**作为缩放的中心点。
+
+```c
+void DrawZoomCentered(int x_, int y_, float ratio);
+```
+
+**参数**
+
+- x_：要绘制的位置，左上角的X坐标
+- y_：要绘制的位置，左上角的X坐标
+- ratio：缩放的比例；取值范围：`[0.0f, 1.0f]`
+
+**返回值**
+
+无
+
+**特性**
+
+- 支持边界裁剪，可以安全的在任意超出屏幕的XY坐标上绘制，而不会发生崩溃问题
+- 支持透明绘制，会自动将RGB值为 `(255, 0, 255)` 的像素识别为透明，跳过绘制透明像素
+- 以图片的**中心点**，作为缩放的中心点；如果图片缩小后，左上角位置保持不变
+
+**示例**
+
+```c
+myPicture.DrawZoomCentered(200, 200, 0.75f);  // 将 myPicture 图片缩放到0.75倍，绘制在屏幕上
+```
+
 ### picture.SetPixel()
 
 单独设置一个像素的颜色：

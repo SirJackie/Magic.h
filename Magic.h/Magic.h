@@ -546,6 +546,25 @@ public:
 	}
 
 	/**
+	 * @brief: Draw this picture in the position (x, y) on the screen,
+	 *         With a zooming ratio in range [0.0f, 1.0f]
+	 *         to control how big the image should be drawn.
+	 * @note: The zooming center: The CENTRIC of this picture.
+	 * @param x_: The x coordinate of the drawing position.
+	 * @param y_: The x coordinate of the drawing position.
+	 * @param ratio: The zooming ratio, in range [0.0f, 1.0f].
+	 * @return void
+	 */
+
+	void DrawZoomCentered(int x_, int y_, float ratio) {
+
+		int leftPadding = int(this->width * (1.0f - ratio) * 0.5f);
+		int topPadding = int(this->height * (1.0f - ratio) * 0.5f);
+
+		this->DrawZoom(x_ + leftPadding, y_ + topPadding, ratio);
+	}
+
+	/**
 	 * @brief: Set the color of a specific pixel IN THIS PICTURE.
 	 * @param x: The x coordinate of the specific pixel.
 	 * @param y: The y coordinate of the specific pixel.
