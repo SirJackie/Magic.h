@@ -135,6 +135,7 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 
 	if (!file) {
 		perror("Error opening file");
+		printf("%s\n", filename);
 		return;
 	}
 
@@ -144,7 +145,13 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	// Read Info Header
 	fread(&info_header, sizeof(info_header), 1, file);
 
-	// Sometimes BMP Encoder Will Save a image_size = 0, which sucks.
+	// Check If BMP is a 24Bit Bitmap.
+	if (info_header.bit_count != 24) {
+		printf("BMP Loader Error: Unsupported Bit Count: %d\n", info_header.bit_count);
+		printf("BMP Loader Only Supports 24Bit Bitmaps.\n");
+	}
+
+	// Sometimes BMP Encoder Will Save a info_header.image_size = 0, which sucks.
 	if (info_header.image_size == 0) {
 		// Manual Correction Required.
 		info_header.image_size = header.size - header.offset;
