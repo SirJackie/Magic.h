@@ -466,12 +466,13 @@ public:
 	/**
 	 * @brief: Draw this picture in the position (x, y) on the screen.
 	 *         Support boundary clipping, can safely drawn on any position.
+	 *         Support transparent filtering (filter: (255, 0, 255) )
 	 * @param x_: The x coordinate of the drawing position.
 	 * @param y_: The x coordinate of the drawing position.
 	 * @return void
 	 */
 
-	void Draw(int x_, int y_){
+	void Draw(int x_, int y_) {
 
 		int screenStartX = x_;
 		int screenStartY = y_;
@@ -483,14 +484,21 @@ public:
 		screenEndX = clamp(0, screenEndX, G_SCREEN_WIDTH);
 		screenEndY = clamp(0, screenEndY, G_SCREEN_HEIGHT);
 
-		for (int y = screenStartY; y < screenEndY; y++){
-			for (int x = screenStartX; x < screenEndX; x++){
-				MagicSetPixel(
-					x, y,
-					this->GetR(x - x_, y - y_),
-					this->GetG(x - x_, y - y_),
-					this->GetB(x - x_, y - y_)
-				);
+		unsigned char ri, gi, bi;
+
+		for (int y = screenStartY; y < screenEndY; y++) {
+			for (int x = screenStartX; x < screenEndX; x++) {
+
+				ri = this->GetR(x - x_, y - y_);
+				gi = this->GetG(x - x_, y - y_);
+				bi = this->GetB(x - x_, y - y_);
+
+				if (ri == 255 && gi == 0 && bi == 255) {
+					// Pink, Transparent, Do Not Draw.
+					continue;
+				}
+
+				MagicSetPixel(x, y, ri, gi, bi);
 			}
 		}
 	}
