@@ -128,7 +128,6 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 		TEXT("MagicDotHBuffer") // NAME of Shared Memory
 	);
 	OutputDebugString(L"Open Shared Memory Failed, Retry...\n");
-	Sleep(10);
 
 	if (hMapFile != NULL) {
 		// @@@ Map Up the Shared Memory
@@ -140,7 +139,6 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 			PIPE_LENGTH             // Mapping SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
 		);
 		OutputDebugString(L"Map Shared Memory Failed, Retry...\n");
-		Sleep(10);
 
 		if (pBuf != NULL) {
 			// Enter the Main Game-Loop
