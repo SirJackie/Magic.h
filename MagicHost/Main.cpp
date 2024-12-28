@@ -5,6 +5,7 @@
 #include "FPSCalculator.h"
 #include "FPSLocker.h"
 #include "HighPrecisionTime.h"
+#include "DebuggerLog.h"
 
 // Window Size
 extern const int WINDOW_WIDTH;

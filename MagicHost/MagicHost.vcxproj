@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DebuggerLog.h" />
     <ClInclude Include="FPSCalculator.h" />
     <ClInclude Include="FPSLocker.h" />
     <ClInclude Include="framework.h" />
@@ -153,6 +154,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DebuggerLog.cpp" />
     <ClCompile Include="FPSCalculator.cpp" />
     <ClCompile Include="FPSLocker.cpp" />
     <ClCompile Include="HighPrecisionTime.cpp" />

@@ -1,4 +1,7 @@
 #include "FPSLocker.h"
+#include "DebuggerLog.h"
+#include <stdio.h>
+#include <string.h>
 
 FPSLocker::FPSLocker(float targetFPS_)
 {
@@ -26,6 +29,10 @@ void FPSLocker::Lock(int deltaTime)
 	correctionT = int(targetDT) - int(deltaTime);  // Can be positive or negative
 	sleepT += correctionT;
 	sleepT = max(0, sleepT);
+
+	char buffer[32] = { 0 };
+	sprintf_s(buffer, 32, "%d\n", sleepT);
+	DebuggerLog(buffer);
 
 	MicroSleep(sleepT);
 }
