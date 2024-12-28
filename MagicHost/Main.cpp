@@ -107,10 +107,17 @@ void LandingAnimation() {
 	}
 }
 
+bool firstTimeSetup = true;
+
 void Setup(HWND& hwnd, bool* wannaUpdate) {
 
-	// Initialize the time counters
-	thisTime = lastTime = MicroClock();
+	if (firstTimeSetup) {
+		// Initialize the time counters
+		thisTime = lastTime = MicroClock();
+
+		// Update the flag
+		firstTimeSetup = false;
+	}
 
 	// Loading & Landing Animation
 	LandingAnimation();
