@@ -71,7 +71,7 @@ unsigned char colorCounter = 50;
 float sinCurver = 0.0f;
 bool countReversely = false;
 
-void LandingAnimation() {
+void LandingAnimation(bool r, bool g, bool b) {
 	// Clear Screen with Black: (0, 0, 0)
 	for (int y = 0; y < 600; y++) {
 		for (int x = 0; x < 800; x++) {
@@ -85,9 +85,9 @@ void LandingAnimation() {
 	for (int y = 0; y < squareSize; y++) {
 		int currentY = squareY - 50 + y + sin(sinCurver) * 60;
 		for (int x = 0; x < squareSize; x++) {
-			image[(currentY * 800 + squareX + x) * 4 + 0] = colorCounter;
-			image[(currentY * 800 + squareX + x) * 4 + 1] = colorCounter;
-			image[(currentY * 800 + squareX + x) * 4 + 2] = colorCounter;
+			image[(currentY * 800 + squareX + x) * 4 + 0] = b ? colorCounter : 0;
+			image[(currentY * 800 + squareX + x) * 4 + 1] = g ? colorCounter : 0;
+			image[(currentY * 800 + squareX + x) * 4 + 2] = r ? colorCounter : 0;
 		}
 	}
 	sinCurver += 0.08f;
@@ -120,7 +120,7 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 	}
 
 	// Loading & Landing Animation
-	LandingAnimation();
+	LandingAnimation(true, true, false);
 
 	/*
 	** --------------------------------------------------
@@ -160,9 +160,18 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 	lastTime = thisTime;
 }
 
-bool everUpdated = false;
+bool firstTimeUpdate = true;
+bool isShowEverCalled = false;
 
 void Update(HWND& hwnd, bool* wannaExit) {
+
+	if (firstTimeUpdate) {
+		// Do Something
+		;
+
+		// Update the flag
+		firstTimeUpdate = false;
+	}
 
 	/*
 	** --------------------------------------------------
@@ -198,10 +207,10 @@ void Update(HWND& hwnd, bool* wannaExit) {
 
 		// Key Pressed Or Not
 		if (GetAsyncKeyState(VK_LBUTTON) & 0x8000) {
-			isLeftClick  = 1;
+			isLeftClick = 1;
 		}
 		else {
-			isLeftClick  = 0;
+			isLeftClick = 0;
 		}
 		if (GetAsyncKeyState(VK_RBUTTON) & 0x8000) {
 			isRightClick = 1;
@@ -211,43 +220,48 @@ void Update(HWND& hwnd, bool* wannaExit) {
 		}
 	}
 
-	// RAPID IMAGE COPY Using Pointer Technique.
-	int loopTimes = 800 * 600;
-	char* src = ((char*)pBuf) + bufferDelta;  // BGR  BGR  BGR  ; 800x600
-	char* dst = (char*)image;                 // BGR0 BGR0 BGR0 ; 800x600
+	/*
+	** Ever Called Show() in the Client Side?
+	** No : Front Buffer is currently empty, no need to do copying.
+	**      Just show the LandingAnimation(), and wait for the Swap Signal.
+	** Yes: Need to do Frame Buffer copying.
+	**
+	** No Matter Ever Called Show() or not, the Swap Signal should ALWAYS be processed.
+	*/
 
-	for (int i = 0; i < loopTimes; i++) {
-		*(dst++) = *(src++);  // B
-		*(dst++) = *(src++);  // G
-		*(dst++) = *(src++);  // R
-		*(dst++) = 0;
-	}
-
-	if (everUpdated == false) {
+	if (isShowEverCalled == false) {
 		// Prevent Black Screen Appear when User Only Called Magic()
 		// And Pushed NO FRAMES. A User-Friendly Feature.
-		LandingAnimation();
+		LandingAnimation(true, true, true);
+	}
+	else {
+		// RAPID Frame Buffer Copying Using Pointer Technique.
+		int loopTimes = 800 * 600;
+		char* src = ((char*)pBuf) + bufferDelta;  // BGR  BGR  BGR  ; 800x600
+		char* dst = (char*)image;                 // BGR0 BGR0 BGR0 ; 800x600
 
-		// Count & Lock FPS
-		thisTime = MicroClock();
-		fpsCalculator.Count(thisTime - lastTime);
-		fpsLocker.Lock(thisTime - lastTime);
-		lastTime = thisTime;
+		for (int i = 0; i < loopTimes; i++) {
+			*(dst++) = *(src++);  // B
+			*(dst++) = *(src++);  // G
+			*(dst++) = *(src++);  // R
+			*(dst++) = 0;
+		}
 	}
 
+	// Process Swap Signal
 	if (swapSignal == (unsigned char)1) {
-		everUpdated = true;
+		isShowEverCalled = true;
 
 		swapSignal = (unsigned char)0;
 		bufferDelta = bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
 		gotitSignal = (unsigned char)1;
-
-		// Count & Lock FPS
-		thisTime = MicroClock();
-		fpsCalculator.Count(thisTime - lastTime);
-		fpsLocker.Lock(thisTime - lastTime);
-		lastTime = thisTime;
 	}
+
+	// Count & Lock FPS
+	thisTime = MicroClock();
+	fpsCalculator.Count(thisTime - lastTime);
+	fpsLocker.Lock(thisTime - lastTime);
+	lastTime = thisTime;
 }
 
 void Exit() {
