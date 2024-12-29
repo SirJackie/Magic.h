@@ -33,11 +33,21 @@ int main(){
 
 协议内容详见本目录下“LICENSE”文件。
 
+本工程使用了 SDL 和 SDL_mixer 库作为音频接口的依赖项，非常感谢 SDL 项目组提供优秀的开源软件。关于 SDL 和 SDL_mixer 库的开源协议，详见：`./MagicHost/AudioDependency/SDL2-2.30.10-LICENSE.txt` 和 `SDL2_mixer-2.8.0-LICENSE.txt`
+
 ## Demo 展示
 
 ![Demo_Trampoline.gif](./Documentation/GetStarted/C00Setup.assets/Demo_Trampoline.gif)
 
 ![SinWaveEffect.gif](./Documentation/GetStarted/C03Picture.assets/SinWaveEffect.gif)
+
+## 关于 MagicHost 编译
+
+> 注：用户无需阅读本节内容即可使用框架，该节属于为框架开发者准备的备注
+
+- MagicHost必须使用Release x64设置进行编译
+- Release设置能确保框架的运行性能：同等硬件情况下，Release能稳定165FPS，Debug仅能达到45FPS
+- x64设置能确保与调用的SDL DLL相兼容。如果您希望使用x86编译，请将根目录所有SDL DLL更换为x86版
 
 ## 开发日记
 

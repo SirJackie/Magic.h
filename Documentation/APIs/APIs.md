@@ -4,10 +4,10 @@
 
 ### 我需要引入那些文件？
 
-- 您需要确保两个文件存在：**Magic.h** + **MagicHost.exe**。
+- 您需要确保四个文件存在：**Magic.h、MagicHost.exe、SDL2.dll、SDL2_mixer.dll**。
 
-- 导入：您需要将**Magic.h**导入到工程中，同时确保**MagicHost.exe**放置在工程同目录下。
-- 分发：当你要把编译好的程序（例如：MyGame.exe）分发给其他用户使用，您需要确保MagicHost.exe放置在编译好的程序（例如：MyGame.exe）的**同目录下**。
+- 导入：您需要将**Magic.h**导入到工程中，同时确保**MagicHost.exe、SDL2.dll、SDL2_mixer.dll**放置在工程同目录下。
+- 分发：当你要把编译好的程序（例如：MyGame.exe）分发给其他用户使用，您需要确保**MagicHost.exe、SDL2.dll、SDL2_mixer.dll**放置在编译好的程序（例如：MyGame.exe）的**同目录下**。
 
 ### 窗口是如何定义的？
 
@@ -691,6 +691,8 @@ MagicMusic("play channel 0 times -1");
 - 第3部分：使用哪一个通道（多音频播放），取值范围0到127
 - 第4部分：字符串 `times`，用于指定播放几次音频
 - 第5部分：播放几次音频，填写一个数字，`-1` 代表无限循环播放，`0` 代表播放一次，`1` 代表播放两次，`2` 代表播放三次，以此类推
+
+**特别提醒**：当使用有限次数播放（例如 `MagicMusic("play channel 0 times 0");` ）时，如果播放完毕，要进行下一次播放，必须先运行 Stop 命令 `MagicMusic("stop channel 0");`，才能再次运行 Play 命令。
 
 #### Stop 命令：停止播放
 
