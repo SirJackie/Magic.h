@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include "Main.h"
@@ -214,6 +215,66 @@ char* Internal_ReceiveString() {
 #pragma optimize( "", on )
 #endif
 
+int strFindSpaceOrZero(const char* str) {
+	int i = 0;
+	while (true) {
+		if (str[i] == ' ') {
+			return i;
+		}
+		if (str[i] == '\0') {
+			return -1;
+		}
+		i++;
+	}
+}
+
+void strcpy_firstN(char* dst, const char* src, int n) {
+	for (int i = 0; i < n; i++) {
+		dst[i] = src[i];
+	}
+	dst[n] = '\0';
+}
+
+#define MAX_ARG_PARSE_AMOUNT 100
+
+void ArgParser(const char* command, int* argcPtr, char*** argvPtr) {
+	// Allocate a String Pointer List for argv
+	(*argvPtr) = new char* [MAX_ARG_PARSE_AMOUNT];
+	for (int i = 0; i < MAX_ARG_PARSE_AMOUNT; i++) {
+		(*argvPtr)[i] = nullptr;
+	}
+
+	const char* ptr = command;
+	int spaceIdx = 0;
+
+	while (true) {
+		spaceIdx = strFindSpaceOrZero(ptr);
+
+		if (spaceIdx != -1) {  // First N Args
+			*argcPtr += 1;
+			(*argvPtr)[(*argcPtr) - 1] = new char[spaceIdx + (long long)1];
+			strcpy_firstN((*argvPtr)[(*argcPtr) - 1], ptr, spaceIdx);
+			ptr = ptr + spaceIdx + 1;
+		}
+		else if (spaceIdx == -1) {  // Last 1 Arg
+			*argcPtr += 1;
+			int bufSize = strlen(ptr) + (long long)1;
+			(*argvPtr)[(*argcPtr) - 1] = new char[bufSize];
+			strcpy_s((*argvPtr)[(*argcPtr) - 1], bufSize, ptr);
+			break;
+		}
+	}
+}
+
+void ArgParser_Freer(int* argcPtr, char*** argvPtr) {
+	for (int i = 0; i < (*argcPtr); i++) {
+		delete[] (*argvPtr)[i];
+		(*argvPtr)[i] = nullptr;
+	}
+	delete[] (*argvPtr);
+	(*argvPtr) = nullptr;
+}
+
 // DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
@@ -230,8 +291,21 @@ void MagicMusic_Receiver() {
 		// String Transfer thru Pipe.
 		char* command = Internal_ReceiveString();
 
-		// Process the command.
-		DebuggerLog(command);
+		// Parse arguments in the command.
+		int argc = 0;
+		char** argv = nullptr;
+		ArgParser(command, &argc, &argv);
+
+		// Output the Parse Result for Debugging.
+		for (int i = 0; i < argc; i++) {
+			DebuggerLog(argv[i]);
+			DebuggerLog(" ");
+		}
+		DebuggerLog("\n");
+
+		// Release Allocated Memory
+		ArgParser_Freer(&argc, &argv);
+		delete[] command;
 	}
 }
 
