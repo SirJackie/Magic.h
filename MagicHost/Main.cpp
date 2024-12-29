@@ -153,6 +153,14 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 		}
 	}
 
+	if (*wannaUpdate == true) {
+		// Initialize Process Pipe to ALL 0.
+		memset((void*)pBuf, 0, PIPE_LENGTH);
+
+		// Ensure this value is initialized.
+		fpsLockRate = 60;
+	}
+
 	// Count & Lock FPS
 	thisTime = MicroClock();
 	fpsCalculator.Count(thisTime - lastTime);
