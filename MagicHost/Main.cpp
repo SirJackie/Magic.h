@@ -307,7 +307,7 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 		FALSE,                  // DO NOT Inherit
 		G_PIPE_NAME             // NAME of Shared Memory
 	);
-	OutputDebugString(L"Open Shared Memory Failed, Retry...\n");
+	DebuggerLog("Open Shared Memory Failed, Retry...\n");
 
 	if (G_hMapFile != NULL) {
 		// @@@ Map Up the Shared Memory
@@ -318,9 +318,12 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 			0,                      // Mapping Offset
 			PIPE_LENGTH             // Mapping SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
 		);
-		OutputDebugString(L"Map Shared Memory Failed, Retry...\n");
+		DebuggerLog("Map Shared Memory Failed, Retry...\n");
 
 		if (G_pBuf != NULL) {
+			// Connection Success, Output Message.
+			DebuggerLog("Connection Success!\n");
+
 			// Enter the Main Game-Loop
 			*wannaUpdate = true;
 		}
