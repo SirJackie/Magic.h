@@ -45,26 +45,46 @@ int main(){
 
 于是，萌生出了写开发日记的想法，记录一些开发时的思路，供未来的自己参考：
 
-- [关于加载动画和非线性动画的几件事](./Documentation/Machanism/AboutLoadingAnimationAndNonLinearity.md)
-- [讨厌的MSVC编译器优化](./Documentation/Machanism/AnnoyingMSVCOptimization.md)
-- [三重指针：参数解析器背后的故事](./Documentation/Machanism/ArgParserMachanism.md)
-- [位图加载：如何加载各种离谱的非规范BMP文件](./Documentation/Machanism/BitmapLoaderMachanism.md)
-- [双缓冲：前后帧缓冲的交换机制和时序](./Documentation/Machanism/BufferSwapingMachanism.md)
+### 关于框架
+
+- [Magic框架背后的故事：为什么开发这个框架？](./Documentation/Machanism/TheStoryBehindThisFrameworkAndWhyDevelopThis.md)
+- [为什么编译基于Magic程序，如此简单？](./Documentation/Machanism/WhyCompilationSoEasy.md)
 - [Client-Host分离机制，和背后的设计考量](./Documentation/Machanism/ClientHostSeperation.md)
-- [DebuggerLog小工具，和宽字符串转换](./Documentation/Machanism/DebuggerLogMachanism.md)
+
+### 关于进程管道
+
+- [内部参考文档：进程管道的变量分布](./Documentation/Machanism/SharedPipeVariableDistribution.md)
+- [基于进程管道的长字符串分段传输方法](./Documentation/Machanism/StringTransferMachanism.md)
+
+### 关于图形绘制
+
+- [Invoke 机制解释](./Documentation/Machanism/InvokeMachanism.md)
+- [双缓冲：前后帧缓冲的交换机制和时序](./Documentation/Machanism/BufferSwapingMachanism.md)
+- [讨厌的MSVC编译器优化](./Documentation/Machanism/AnnoyingMSVCOptimization.md)
+- [位图加载：如何加载各种离谱的非规范BMP文件](./Documentation/Machanism/BitmapLoaderMachanism.md)
 - [缩放绘制位图：两种设计方案的优劣](./Documentation/Machanism/DrawZoomMachanism.md)
+- [关于加载动画和非线性动画的几件事](./Documentation/Machanism/AboutLoadingAnimationAndNonLinearity.md)
+
+### 关于FPS
+
 - [FPS计数器的实现原理](./Documentation/Machanism/FPSCounterMachanism.md)
 - [FPS锁帧器的实现原理](./Documentation/Machanism/FPSLockerMachanism.md)
 - [高精度：如何实现纳秒级精确度的Clock&Sleep](./Documentation/Machanism/HighPrecisionTimeMachanism.md)
-- [Invoke 机制解释](./Documentation/Machanism/InvokeMachanism.md)
+
+### 音乐、文字和杂项
+
 - [Magic音频接口：如何实现的？](./Documentation/Machanism/MagicMusicInterfaceMachanism.md)
-- [内部参考文档：进程管道的变量分布](./Documentation/Machanism/SharedPipeVariableDistribution.md)
-- [基于进程管道的长字符串分段传输方法](./Documentation/Machanism/StringTransferMachanism.md)
-- [Magic框架背后的故事：为什么开发这个框架？](./Documentation/Machanism/TheStoryBehindThisFrameworkAndWhyDevelopThis.md)
-- [为什么编译基于Magic程序，如此简单？](./Documentation/Machanism/WhyCompilationSoEasy.md)
+- [三重指针：参数解析器背后的故事](./Documentation/Machanism/ArgParserMachanism.md)
+- [DebuggerLog小工具，和宽字符串转换](./Documentation/Machanism/DebuggerLogMachanism.md)
+
+### FAQ 常见问题
+
 - [为什么不提供DeltaTime？](./Documentation/Machanism/WhyDontWeUseDeltatime.md)
 - [为什么要使用固定的分辨率？](./Documentation/Machanism/WhyTheWindowSizeIsFixed.md)
 - [为什么不适用Win32 API提供的Winmm多媒体库，来实现音频接口，而是外部引入SDL库？](./Documentation/Machanism/WhyWeUseSDLNotWinmmAsAudioInterface.md)
+
+### 未来展望
+
 - [Magic框架，未来会支持3D渲染 / OpenGL API吗？](./Documentation/Machanism/Will3DOrOpenGLBeSupportedInTheFuture.md)
 - [Magic框架，未来会支持跨平台 / 手机应用开发吗？](./Documentation/Machanism/WillCrossPlatformBeSupportedInTheFuture.md)
 
