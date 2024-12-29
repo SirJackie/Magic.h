@@ -75,8 +75,8 @@ bool countReversely = false;
 
 // Internal Definitions
 #define exitSignal     (((char*)G_pBuf)[ 0])   // [ 0]
-#define swapSignal     (((char*)G_pBuf)[ 1])   // [ 1]
-#define gotitSignal    (((char*)G_pBuf)[ 2])   // [ 2]
+#define invokeBufSwap  (((char*)G_pBuf)[ 1])   // [ 1]
+#define invokeReceived (((char*)G_pBuf)[ 2])   // [ 2]
 
 // User API Definitions
 #define fpsLockRate    (((int* )G_pBuf)[ 3])   // [ 3] [ 4] [ 5] [ 6]
@@ -94,7 +94,10 @@ bool countReversely = false;
 #define stringLen      (((int* )G_pBuf)[290])  // [290] [291] [292] [293]
 #define invokeTransfer (((char*)G_pBuf)[294])  // [294]
 #define invokeSendBtch (((char*)G_pBuf)[295])  // [295]
-#define invokeReceived (((char*)G_pBuf)[296])  // [296]
+
+// Music & Text Interface
+#define invokeMusic    (((char*)G_pBuf)[296])  // [296]
+#define invokeText     (((char*)G_pBuf)[297])  // [297]
 
 
 /**
@@ -162,19 +165,20 @@ void LandingAnimation(bool r, bool g, bool b) {
 	}
 }
 
-// DISABLE MSVC OPEIMIZATION for Internal_ReceiveString() Function: START
+// DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
 
 char* Internal_ReceiveString() {
-	// If there's no invokation requests, just return.
-	if (!invokeTransfer) {
-		return nullptr;
-	}
 
-	// Process Invokation, receiving the length of the string.
+	// Wait for Invoke Signal
+	while (invokeTransfer == 0);
+
+	// Receive the length of the string
 	int length = stringLen;
+
+	// Process Invoke Signal
 	invokeTransfer = 0;
 	invokeReceived = 1;
 
@@ -185,12 +189,11 @@ char* Internal_ReceiveString() {
 	int howManyBatch = length / 16 + (length % 16 == 0 ? 0 : 1);
 	for (int batch = 0; batch < howManyBatch; batch++) {
 
-		while (!invokeSendBtch);  // Wait Until the "Send Batch" Signal Comes.
-
-		// Send a single batch of string.
-		char* ptr = dest + batch * 16;  // Destination: Starting Position
+		// Wait for Invoke Signal
+		while (invokeSendBtch == 0);
 
 		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		char* ptr = dest + batch * 16;  // Destination: Starting Position
 		for (int i = 0; i < 16; i++) {
 			ptr[i] = stringBuf[i];
 			if (stringBuf[i] == '\0') {
@@ -198,7 +201,7 @@ char* Internal_ReceiveString() {
 			}
 		}
 
-		// Send the "Got it" Signal
+		// Process Invoke Signal
 		invokeSendBtch = 0;
 		invokeReceived = 1;
 	}
@@ -206,7 +209,33 @@ char* Internal_ReceiveString() {
 	return dest;
 }
 
-// DISABLE MSVC OPEIMIZATION for Internal_ReceiveString() Function: END
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+void MagicMusic_Receiver() {
+	// Process Invoke Signal
+	if (invokeMusic == 1) {
+
+		// Process Invoke Signal
+		invokeMusic = 0;
+		invokeReceived = 1;
+
+		// String Transfer thru Pipe.
+		char* command = Internal_ReceiveString();
+
+		// Process the command.
+		DebuggerLog(command);
+	}
+}
+
+// DISABLE MSVC OPTIMIZATION: END
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
@@ -297,14 +326,6 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 		}
 	}
 
-	if (*wannaUpdate == true) {
-		// Initialize Process Pipe to ALL 0.
-		memset((void*)G_pBuf, 0, PIPE_LENGTH);
-
-		// Ensure this value is initialized.
-		fpsLockRate = 60;
-	}
-
 	// Count & Lock FPS
 	thisTime = MicroClock();
 	fpsCalculator.Count(thisTime - lastTime);
@@ -314,6 +335,11 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 
 bool firstTimeUpdate = true;
 bool isShowEverCalled = false;
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
 
 void Update(HWND& hwnd, bool* wannaExit) {
 
@@ -334,7 +360,7 @@ void Update(HWND& hwnd, bool* wannaExit) {
 	// Exit Signal Processing.
 	if (exitSignal == (unsigned char)1) {
 		*wannaExit = true;
-		gotitSignal = (unsigned char)1;
+		invokeReceived = (unsigned char)1;
 	}
 
 	// FPS Lock Rate Updating thru Pipe.
@@ -372,11 +398,8 @@ void Update(HWND& hwnd, bool* wannaExit) {
 		}
 	}
 
-	// String Transfer thru Pipe.
-	char* result = Internal_ReceiveString();
-	if (result != nullptr) {
-		DebuggerLog(result);
-	}
+	// String Interface thru Pipe.
+	MagicMusic_Receiver();
 
 	/*
 	** Ever Called Show() in the Client Side?
@@ -406,13 +429,15 @@ void Update(HWND& hwnd, bool* wannaExit) {
 		}
 	}
 
-	// Process Swap Signal
-	if (swapSignal == (unsigned char)1) {
+	// Process Invoke Signal (Buffer Swap)
+	if (invokeBufSwap == 1) {
+		// Swap Buffers
 		isShowEverCalled = true;
-
-		swapSignal = (unsigned char)0;
 		G_bufferDelta = G_bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
-		gotitSignal = (unsigned char)1;
+
+		// Process Invoke Signal
+		invokeBufSwap = 0;
+		invokeReceived = 1;
 	}
 
 	// Count & Lock FPS
@@ -421,6 +446,11 @@ void Update(HWND& hwnd, bool* wannaExit) {
 	fpsLocker.Lock(thisTime - lastTime);
 	lastTime = thisTime;
 }
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
 
 void Exit() {
 

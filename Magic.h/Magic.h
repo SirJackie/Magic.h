@@ -106,8 +106,8 @@ typedef struct {
 
 // Internal Definitions
 #define exitSignal     (((char*)G_pBuf)[ 0])   // [ 0]
-#define swapSignal     (((char*)G_pBuf)[ 1])   // [ 1]
-#define gotitSignal    (((char*)G_pBuf)[ 2])   // [ 2]
+#define invokeBufSwap  (((char*)G_pBuf)[ 1])   // [ 1]
+#define invokeReceived (((char*)G_pBuf)[ 2])   // [ 2]
 
 // User API Definitions
 #define fpsLockRate    (((int* )G_pBuf)[ 3])   // [ 3] [ 4] [ 5] [ 6]
@@ -125,7 +125,10 @@ typedef struct {
 #define stringLen      (((int* )G_pBuf)[290])  // [290] [291] [292] [293]
 #define invokeTransfer (((char*)G_pBuf)[294])  // [294]
 #define invokeSendBtch (((char*)G_pBuf)[295])  // [295]
-#define invokeReceived (((char*)G_pBuf)[296])  // [296]
+
+// Music & Text Interface
+#define invokeMusic    (((char*)G_pBuf)[296])  // [296]
+#define invokeText     (((char*)G_pBuf)[297])  // [297]
 
 
 /**
@@ -232,18 +235,22 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	*pitch = info_header.image_size / info_header.height;
 }
 
-// DISABLE MSVC OPEIMIZATION for Internal_SendString() Function: START
+// DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
 
 void Internal_SendString(const char* str) {
-	// Invoke a transfer process, sending the length of the string.
+
+	// Save the length of the string to pipe.
 	int length = strlen(str) + 1;
 	stringLen = length;
+
+	// Invoke String Transfer
 	invokeReceived = 0;
 	invokeTransfer = 1;
-	while (!invokeReceived);  // Waiting for feedback
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
 
 	// Sending the long string batch by batch.
 	int howManyBatch = length / 16 + (length % 16 == 0 ? 0 : 1);
@@ -260,14 +267,15 @@ void Internal_SendString(const char* str) {
 			}
 		}
 
-		// Send the "Send Batch" Signal
+		// Invoke "Send Batch" Signal
 		invokeReceived = 0;
 		invokeSendBtch = 1;
-		while (!invokeReceived);  // Waiting for feedback
+		while (invokeReceived == 0);  // Wait for Response
+		invokeReceived = 0;
 	}
 }
 
-// DISABLE MSVC OPEIMIZATION for Internal_SendString() Function: END
+// DISABLE MSVC OPTIMIZATION: END
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
@@ -305,7 +313,7 @@ void Magic(int fps = 60){
 		PAGE_READWRITE,         // Read and write permissions
 		0,                      // Max Obj Size's HIGHER 32 Bits
 		PIPE_LENGTH,            // Max Obj Size's LOWER 32 Bits, aka PIPE SIZE, (SIGN_LENGTH+2*PAGE_LENGTH)
-		G_PIPE_NAME               // NAME of Shared Memory
+		G_PIPE_NAME             // NAME of Shared Memory
 	);
 	if (G_hMapFile == NULL) {
 		GetLastError();  // Error Code.
@@ -313,7 +321,7 @@ void Magic(int fps = 60){
 
 	// Map Up the Shared Memory
 	G_pBuf = (LPTSTR) MapViewOfFile(
-		G_hMapFile,               // HANDLE of Shared Memory
+		G_hMapFile,             // HANDLE of Shared Memory
 		FILE_MAP_ALL_ACCESS,    // Write Permission
 		0,                      // Mapping Offset
 		0,                      // Mapping Offset
@@ -332,9 +340,15 @@ void Magic(int fps = 60){
 	// Initialize Pipe Signals
 	//
 
+	// Initialize Process Pipe to ALL 0.
+	for (char* ptr = (char*)G_pBuf; ptr < ((char*)G_pBuf) + PIPE_LENGTH; ptr++) {
+		*ptr = 0;
+	}
+
+	// Initialize Pipe Signals
 	exitSignal  = (unsigned char) 0;
-	swapSignal  = (unsigned char) 0;
-	gotitSignal = (unsigned char) 0;
+	invokeBufSwap  = (unsigned char) 0;
+	invokeReceived = (unsigned char) 0;
 	fpsLockRate = (int) fps;
 
 	//
@@ -357,15 +371,15 @@ void Quit(){
 
 	// Sending Exit Signal
 	exitSignal = (unsigned char) 1;
-	while(gotitSignal != 1);  // Wait Until Exiting Finished.
-	gotitSignal = (unsigned char) 0;
+	while(invokeReceived != 1);  // Wait Until Exiting Finished.
+	invokeReceived = (unsigned char) 0;
 
 	// Delete Shared Memory
 	UnmapViewOfFile(G_pBuf);
 	CloseHandle(G_hMapFile);
 }
 
-// DISABLE MSVC OPEIMIZATION for Show() Function: START
+// DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
@@ -376,20 +390,18 @@ void Quit(){
  */
 
 void Show(){
-	// Swapping Buffers
+	// Swapping Buffers: Client Side
 	G_bufferDelta = G_bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
-	swapSignal = (unsigned char) 1;
-
-	// You MUST DISABLE MSVC OPEIMIZATION in Order to Make the Following Line Work.
-	while(gotitSignal != 1);  // Wait Until Pushing Finished.
-
-	gotitSignal = (unsigned char) 0;
-
-	// Update Pixels Buffer Pointer
 	G_pixels = ((unsigned char*)G_pBuf + G_bufferDelta);
+
+	// Invoke Buffer Swap: Host Side
+	invokeReceived = 0;
+	invokeBufSwap = 1;
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
 }
 
-// DISABLE MSVC OPEIMIZATION for Show() Function: END
+// DISABLE MSVC OPTIMIZATION: END
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
@@ -509,6 +521,28 @@ inline unsigned char MagicGetB(int x, int y) {
 
 	return G_pixels[((y * 800) + x) * 3 + 0];  // B
 }
+
+// DISABLE MSVC OPEIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+void MagicMusic(const char* command) {
+
+	// Invoke Music Interface
+	invokeReceived = 0;
+	invokeMusic = 1;
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
+
+	// Transfer the Commands
+	Internal_SendString(command);
+}
+
+// DISABLE MSVC OPEIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
 
 
 /**
