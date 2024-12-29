@@ -2,6 +2,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include "Main.h"
@@ -44,6 +45,11 @@ int squareY = (600 - squareSize) / 2;
 unsigned char colorCounter = 50;
 float sinCurver = 0.0f;
 bool countReversely = false;
+
+// For Music Interface
+#define MAX_MUSIC_CHANNELS 128
+Mix_Music* sdlMusicPtr = nullptr;
+Mix_Chunk* sdlChunkPtrs[MAX_MUSIC_CHANNELS] = { nullptr };
 
 
 /**
@@ -235,6 +241,12 @@ void strcpy_firstN(char* dst, const char* src, int n) {
 	dst[n] = '\0';
 }
 
+int str2int(const char* str) {
+	int result;
+	sscanf_s(str, "%d", &result);
+	return result;
+}
+
 #define MAX_ARG_PARSE_AMOUNT 100
 
 void ArgParser(const char* command, int* argcPtr, char*** argvPtr) {
@@ -303,6 +315,83 @@ void MagicMusic_Receiver() {
 		}
 		DebuggerLog("\n");
 
+		//
+		// Process Music Command: START
+		//
+
+		// Open Command; Example:
+		// "open .\\Music\\bg.wav on_channel 0"
+		if (strcmp(argv[0], "open") == 0) {
+			if (argc != 4) {
+				DebuggerLog("Invalid Args for 'open' command: Not equal to 4.\n");
+			}
+			const char* filename = argv[1];
+			int channel = str2int(argv[3]);
+
+			if (channel == 0) {
+				sdlMusicPtr = Mix_LoadMUS(filename);
+			}
+			else {
+				sdlChunkPtrs[channel] = Mix_LoadWAV(filename);
+			}
+		}
+		
+		// Play Command; Example:
+		// "play channel 0 times -1"
+		else if (strcmp(argv[0], "play") == 0) {
+			if (argc != 5) {
+				DebuggerLog("Invalid Args for 'play' command: Not equal to 5.\n");
+			}
+			int channel = str2int(argv[2]);
+			int times = str2int(argv[4]);
+
+			if (channel == 0) {
+				//Mix_PlayMusic(sdlMusicPtr, -1);
+				Mix_PlayMusic(sdlMusicPtr, times);
+			}
+			else {
+				Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
+			}
+		}
+		
+		// Stop Command; Example:
+		// "stop channel 0"
+		else if (strcmp(argv[0], "stop") == 0) {
+			if (argc != 3) {
+				DebuggerLog("Invalid Args for 'stop' command: Not equal to 3.\n");
+			}
+			int channel = str2int(argv[2]);
+
+			if (channel == 0) {
+				Mix_HaltMusic();
+			}
+			else {
+				Mix_HaltChannel(channel);
+			}
+		}
+		
+		// Close Command; Example:
+		// "close channel 0"
+		else if (strcmp(argv[0], "close") == 0) {
+			if (argc != 3) {
+				DebuggerLog("Invalid Args for 'close' command: Not equal to 3.\n");
+			}
+			int channel = str2int(argv[2]);
+
+			if (channel == 0) {
+				Mix_FreeMusic(sdlMusicPtr);
+				sdlMusicPtr = nullptr;
+			}
+			else {
+				Mix_FreeChunk(sdlChunkPtrs[channel]);
+				sdlChunkPtrs[channel] = nullptr;
+			}
+		}
+
+		//
+		// Process Music Command: END
+		//
+
 		// Release Allocated Memory
 		ArgParser_Freer(&argc, &argv);
 		delete[] command;
@@ -322,45 +411,15 @@ void MagicMusic_Receiver() {
 
 
 bool firstTimeSetup = true;
-Mix_Music* bgMusic;
-int count = 0;
 
 void Setup(HWND& hwnd, bool* wannaUpdate) {
 
 	if (firstTimeSetup) {
-		// Play Music
-		Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
-		bgMusic = Mix_LoadMUS(".\\Music\\bg.wav");
-	}
-
-	if (count == 0) {
-		// Play Music
-		Mix_PlayMusic(bgMusic, -1);
-	}
-
-	/*if (count % 100 == 50) {
-		Mix_PauseMusic();
-	}
-
-	if (count % 100 == 0) {
-		Mix_ResumeMusic();
-	}*/
-
-	/*if (count % 100 == 50) {
-		Mix_HaltMusic();
-	}
-
-	if (count % 100 == 0) {
-		Mix_PlayMusic(bgMusic, -1);
-	}*/
-
-	count++;
-
-	// ----------
-
-	if (firstTimeSetup) {
 		// Initialize the time counters
 		thisTime = lastTime = MicroClock();
+
+		// Initialize SDL Audio Interface
+		Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
 
 		// Update the flag
 		firstTimeSetup = false;
