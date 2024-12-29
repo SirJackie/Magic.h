@@ -39,3 +39,33 @@ int main(){
 
 ![SinWaveEffect.gif](./Documentation/GetStarted/C03Picture.assets/SinWaveEffect.gif)
 
+## 开发日记
+
+开发之旅饶有趣味，既能汲取诸多知识，又能催生不少新想法。
+
+于是，萌生出了写开发日记的想法，记录一些开发时的思路，供未来的自己参考：
+
+- [啊啊啊](./Documentation/Machanism/AboutLoadingAnimationAndNonLinearity.md)
+- [啊啊啊](./Documentation/Machanism/AnnoyingMSVCOptimization.md)
+- [啊啊啊](./Documentation/Machanism/ArgParserMachanism.md)
+- [啊啊啊](./Documentation/Machanism/BitmapLoaderMachanism.md)
+- [啊啊啊](./Documentation/Machanism/BufferSwapingMachanism.md)
+- [啊啊啊](./Documentation/Machanism/ClientHostSeperation.md)
+- [啊啊啊](./Documentation/Machanism/DebuggerLogMachanism.md)
+- [啊啊啊](./Documentation/Machanism/DrawZoomMachanism.md)
+- [啊啊啊](./Documentation/Machanism/FPSCounterMachanism.md)
+- [啊啊啊](./Documentation/Machanism/FPSLockerMachanism.md)
+- [啊啊啊](./Documentation/Machanism/HighPrecisionTimeMachanism.md)
+- [啊啊啊](./Documentation/Machanism/InvokeMachanism.md)
+- [啊啊啊](./Documentation/Machanism/MagicMusicInterfaceMachanism.md)
+- [啊啊啊](./Documentation/Machanism/SharedPipeVariableDistribution.md)
+- [啊啊啊](./Documentation/Machanism/StringTransferMachanism.md)
+- [啊啊啊](./Documentation/Machanism/TheStoryBehindThisFrameworkAndWhyDevelopThis.md)
+- [啊啊啊](./Documentation/Machanism/WhyCompilationSoEasy.md)
+- [啊啊啊](./Documentation/Machanism/WhyDontWeUseDeltatime.md)
+- [啊啊啊](./Documentation/Machanism/WhyTheWindowSizeIsFixed.md)
+- [啊啊啊](./Documentation/Machanism/WhyWeUseSDLNotWinmmAsAudioInterface.md)
+- [啊啊啊](./Documentation/Machanism/Will3DOrOpenGLBeSupportedInTheFuture.md)
+- [啊啊啊](./Documentation/Machanism/WillCrossPlatformBeSupportedInTheFuture.md)
+
+
