@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <time.h>
 #include <math.h>
+#include <SDL.h>
+#include <SDL_mixer.h>
 #include "Main.h"
 #include "FPSCalculator.h"
 #include "FPSLocker.h"
@@ -217,8 +219,41 @@ char* Internal_ReceiveString() {
 
 
 bool firstTimeSetup = true;
+Mix_Music* bgMusic;
+int count = 0;
 
 void Setup(HWND& hwnd, bool* wannaUpdate) {
+
+	if (firstTimeSetup) {
+		// Play Music
+		Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
+		bgMusic = Mix_LoadMUS(".\\Music\\bg.wav");
+	}
+
+	if (count == 0) {
+		// Play Music
+		Mix_PlayMusic(bgMusic, -1);
+	}
+
+	/*if (count % 100 == 50) {
+		Mix_PauseMusic();
+	}
+
+	if (count % 100 == 0) {
+		Mix_ResumeMusic();
+	}*/
+
+	/*if (count % 100 == 50) {
+		Mix_HaltMusic();
+	}
+
+	if (count % 100 == 0) {
+		Mix_PlayMusic(bgMusic, -1);
+	}*/
+
+	count++;
+
+	// ----------
 
 	if (firstTimeSetup) {
 		// Initialize the time counters

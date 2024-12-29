@@ -1,0 +1,4 @@
+SDL2.lib
+SDL2_mixer.lib
+SDL2main.lib
+SDL2test.lib
