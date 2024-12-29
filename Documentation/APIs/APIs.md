@@ -632,7 +632,166 @@ unsigned char Picture::GetB(int x, int y);
 printf("%d", myPicture.GetB(100, 100));
 ```
 
-## 5. 键盘鼠标检测
+## 5. 音频播放
+
+### MagicMusic()
+
+音乐播放接口，用于播放音频，仅支持WAV格式音频：
+
+```c
+void MagicMusic(const char* command);
+```
+
+**参数**
+
+- command：一个字符串，传入音频命令
+
+**音频接口介绍**
+
+- Magic 图形框架，定义了一套易于使用的、使用自定义音频终端命令，控制的音频接口API
+- 无需创建和使用任何的变量、对象、函数，即可控制音乐的播放、暂停
+
+**总体使用原则**
+
+- **命令分为 `n` 个部分，每个部分用空格隔开**
+
+- **可以同时播放多个音频，用通道数来指定。通道共有128个，通道数为0到127**
+
+- **第0通道有特殊优化处理，使用流加载，节约内存，更加稳定，因此适合播放长音频 (>=30秒的音频)**
+
+  **如果您有长音频 / 背景音乐需要播放，请尽量安排在第0通道。而第1到127通道完全相同，没有额外处理**
+
+**命令使用方法：**
+
+-----
+
+#### Open 命令：打开音频文件
+
+```c
+MagicMusic("open .\\Music\\bg.wav on_channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `open`，用于唤醒 `open` 命令
+- 第2部分：音频文件的路径，**不能有空格和中文**；例如：`.\\Music\\bg.wav`
+- 第3部分：字符串 `on_channel`，用于指定音频播放通道，**注意：`on` 和 `channel` 之间不能有空格！**
+- 第4部分：使用哪一个通道（多音频播放），取值范围0到127
+
+#### Play 命令：播放音频
+
+```c
+MagicMusic("play channel 0 times -1");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `play`，用于唤醒 `play` 命令
+- 第2部分：字符串 `channel`，用于指定音频播放通道
+- 第3部分：使用哪一个通道（多音频播放），取值范围0到127
+- 第4部分：字符串 `times`，用于指定播放几次音频
+- 第5部分：播放几次音频，填写一个数字，`-1` 代表无限循环播放，`0` 代表播放一次，`1` 代表播放两次，`2` 代表播放三次，以此类推
+
+#### Stop 命令：停止播放
+
+```c
+MagicMusic("stop channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `stop`，用于唤醒 `stop` 命令
+- 第2部分：字符串 `channel`，用于指定音频播放通道
+- 第3部分：使用哪一个通道（多音频播放），取值范围0到127
+
+#### Pause 命令：暂停播放
+
+```c
+MagicMusic("pause channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `pause`，用于唤醒 `pause` 命令
+- 第2部分：字符串 `channel`，用于指定音频播放通道
+- 第3部分：使用哪一个通道（多音频播放），取值范围0到127
+
+#### Resume 命令：继续播放
+
+```c
+MagicMusic("resume channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `resume`，用于唤醒 `resume` 命令
+- 第2部分：字符串 `channel`，用于指定音频播放通道
+- 第3部分：使用哪一个通道（多音频播放），取值范围0到127
+
+#### Close 命令：关闭音频文件
+
+```c
+MagicMusic("close channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `close`，用于唤醒 `close` 命令
+- 第2部分：字符串 `channel`，用于指定音频播放通道
+- 第3部分：使用哪一个通道（多音频播放），取值范围0到127
+
+-----
+
+**返回值**
+
+无
+
+**示例**
+
+```c
+#include <stdio.h>
+#include "Magic.h"
+
+int main() {
+	Magic();
+
+	MagicMusic("open .\\Music\\MapBGM.wav on_channel 0");
+	MagicMusic("play channel 0 times -1");
+	MagicMusic("open .\\Music\\FootSound.wav on_channel 1");
+	MagicMusic("play channel 1 times -1");
+
+	while (true) {
+		for (int i = 0; i < 100; i++) {
+			MagicSetPixel(100, 100, 255, 255, 255);
+			printf("Pushed.\n");
+			Show();
+		}
+
+		MagicMusic("pause channel 0");
+		MagicMusic("pause channel 1");
+
+		for (int i = 0; i < 100; i++) {
+			MagicSetPixel(100, 100, 255, 255, 255);
+			printf("Pushed.\n");
+			Show();
+		}
+
+		MagicMusic("resume channel 0");
+		MagicMusic("resume channel 1");
+	}
+
+	MagicMusic("stop channel 0");
+	MagicMusic("close channel 0");
+	MagicMusic("stop channel 1");
+	MagicMusic("close channel 1");
+}
+```
+
+## 6. 文字显示
+
+暂未实现，请稍等
+
+## 7. 键盘鼠标检测
 
 ### mouseX / mouseY
 
