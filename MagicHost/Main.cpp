@@ -7,6 +7,13 @@
 #include "HighPrecisionTime.h"
 #include "DebuggerLog.h"
 
+
+/**
+ * @section
+ * MagicHost Only Definitions
+ */
+
+
 // Window Size
 extern const int WINDOW_WIDTH;
 extern const int WINDOW_HEIGHT;
@@ -19,49 +26,13 @@ extern const int IMAGE_HEIGHT;
 extern const int IMAGE_SIZE;
 extern BYTE* image;
 
-// Shared Memory
-HANDLE  hMapFile = NULL;       // Shared Memory Handle
-LPCTSTR pBuf = NULL;           // Shared Memory Buffer
-
-// ----------
-
-#define PAGE_LENGTH 1440000  // (800 x 600 x 3) bytes
-#define SIGN_LENGTH 8192
-#define PIPE_LENGTH (SIGN_LENGTH+2*PAGE_LENGTH)
-
-// ----------
-
+// Keyboard Buffer
 extern char keyboardBuffer[256];
-
-#define exitSignal   (((char*)pBuf)[0])  // [0]
-#define swapSignal   (((char*)pBuf)[1])  // [1]
-#define gotitSignal  (((char*)pBuf)[2])  // [2]
-#define fpsLockRate  (((int* )pBuf)[3])  // [3] [4] [5] [6]
-#define isWinFocus   (((char*)pBuf)[7])  // [7]
-
-#define mouseX       (((int* )pBuf)[ 8])  // [ 8] [ 9] [10] [11]
-#define mouseY       (((int* )pBuf)[12])  // [12] [13] [14] [15]
-#define isLeftClick  (((char*)pBuf)[16])  // [16]
-#define isRightClick (((char*)pBuf)[17])  // [17]
-
-#define keyboard     (((char*)pBuf) +18)  // [18] [19] ... [273]
-
-int bufferDelta = PAGE_LENGTH + SIGN_LENGTH;  // Start from the second buffer.
-
-// ----------
 
 // FPS Counter & Locker
 uint64 thisTime, lastTime;
 extern FPSCalculator fpsCalculator;
 FPSLocker fpsLocker(60);
-
-bool IsWindowFocused(HWND hwnd) {
-	// 获取当前拥有焦点的窗口
-	HWND focusedWindow = GetForegroundWindow();
-
-	// 比较句柄是否相同
-	return (focusedWindow == hwnd);
-}
 
 // For Loading & Landing Animation
 int squareSize = 50;
@@ -70,6 +41,88 @@ int squareY = (600 - squareSize) / 2;
 unsigned char colorCounter = 50;
 float sinCurver = 0.0f;
 bool countReversely = false;
+
+
+/**
+ * @section
+ * Global Definitions
+ */
+
+
+// MSVC Compiler WChar Feature Compatibility.
+#if defined(_MSC_VER)
+#define G_PIPE_NAME TEXT("MagicDotHBuffer")
+#else
+#define G_PIPE_NAME ("MagicDotHBuffer")
+#endif
+
+// Screen Size
+#define G_SCREEN_WIDTH 800
+#define G_SCREEN_HEIGHT 600
+
+// Process Pipe Offsets
+#define PAGE_LENGTH 1440000  // (800 x 600 x 3) bytes
+#define SIGN_LENGTH 8192
+#define PIPE_LENGTH (SIGN_LENGTH+2*PAGE_LENGTH)
+
+
+/**
+ * @section
+ * Pipe Definitions
+ */
+
+// Internal Definitions
+#define exitSignal     (((char*)G_pBuf)[ 0])   // [ 0]
+#define swapSignal     (((char*)G_pBuf)[ 1])   // [ 1]
+#define gotitSignal    (((char*)G_pBuf)[ 2])   // [ 2]
+
+// User API Definitions
+#define fpsLockRate    (((int* )G_pBuf)[ 3])   // [ 3] [ 4] [ 5] [ 6]
+#define isWinFocus     (((char*)G_pBuf)[ 7])   // [ 7]
+
+#define mouseX         (((int* )G_pBuf)[ 8])   // [ 8] [ 9] [10] [11]
+#define mouseY         (((int* )G_pBuf)[12])   // [12] [13] [14] [15]
+#define isLeftClick    (((char*)G_pBuf)[16])   // [16]
+#define isRightClick   (((char*)G_pBuf)[17])   // [17]
+
+#define keyboard       (((char*)G_pBuf) +18)   // [18] [19] ... [273] (len: 256)
+
+// String Transfer Definition
+#define stringBuf      (((char*)G_pBuf) +274)  // [274] [275] ... [289] (len: 16)
+#define stringLen      (((int* )G_pBuf)[290])  // [290] [291] [292] [293]
+#define invokeTransfer (((char*)G_pBuf)[294])  // [294]
+#define invokeSendBtch (((char*)G_pBuf)[295])  // [295]
+#define invokeReceived (((char*)G_pBuf)[296])  // [296]
+
+
+/**
+ * @section
+ * Global Variables
+ */
+
+
+// Win32 API Related
+HANDLE  G_hMapFile = NULL;  // Shared Memory Handle
+LPCTSTR G_pBuf = NULL;      // Shared Memory Buffer
+unsigned char* G_pixels;
+
+// Process Pipe Offset
+int G_bufferDelta = PAGE_LENGTH + SIGN_LENGTH;  // Start from the second buffer.
+
+
+/**
+ * @section
+ * Internal Functions, SHOULD NOT BE CALLED BY USERS!
+ */
+
+
+bool IsWindowFocused(HWND hwnd) {
+	// Get the currently focused window
+	HWND focusedWindow = GetForegroundWindow();
+
+	// Compare whether the handles are the same
+	return (focusedWindow == hwnd);
+}
 
 void LandingAnimation(bool r, bool g, bool b) {
 	// Clear Screen with Black: (0, 0, 0)
@@ -107,6 +160,62 @@ void LandingAnimation(bool r, bool g, bool b) {
 	}
 }
 
+// DISABLE MSVC OPEIMIZATION for Internal_ReceiveString() Function: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+char* Internal_ReceiveString() {
+	// If there's no invokation requests, just return.
+	if (!invokeTransfer) {
+		return nullptr;
+	}
+
+	// Process Invokation, receiving the length of the string.
+	int length = stringLen;
+	invokeTransfer = 0;
+	invokeReceived = 1;
+
+	// Allocate Memory
+	char* dest = new char[length + 1];
+
+	// Receiving the long string batch by batch.
+	int howManyBatch = length / 16 + (length % 16 == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		while (!invokeSendBtch);  // Wait Until the "Send Batch" Signal Comes.
+
+		// Send a single batch of string.
+		char* ptr = dest + batch * 16;  // Destination: Starting Position
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		for (int i = 0; i < 16; i++) {
+			ptr[i] = stringBuf[i];
+			if (stringBuf[i] == '\0') {
+				break;
+			}
+		}
+
+		// Send the "Got it" Signal
+		invokeSendBtch = 0;
+		invokeReceived = 1;
+	}
+
+	return dest;
+}
+
+// DISABLE MSVC OPEIMIZATION for Internal_ReceiveString() Function: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+
+/**
+ * @section
+ * Main Functions, Setup() & Update()
+ */
+
+
 bool firstTimeSetup = true;
 
 void Setup(HWND& hwnd, bool* wannaUpdate) {
@@ -129,17 +238,17 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 	*/
 
 	// @@@ Open Shared Memory
-	hMapFile = OpenFileMapping(
+	G_hMapFile = OpenFileMapping(
 		FILE_MAP_ALL_ACCESS,    // READ & WRITE Permission
 		FALSE,                  // DO NOT Inherit
-		TEXT("MagicDotHBuffer") // NAME of Shared Memory
+		G_PIPE_NAME             // NAME of Shared Memory
 	);
 	OutputDebugString(L"Open Shared Memory Failed, Retry...\n");
 
-	if (hMapFile != NULL) {
+	if (G_hMapFile != NULL) {
 		// @@@ Map Up the Shared Memory
-		pBuf = (LPTSTR)MapViewOfFile(
-			hMapFile,               // HANDLE of Shared Memory
+		G_pBuf = (LPTSTR)MapViewOfFile(
+			G_hMapFile,               // HANDLE of Shared Memory
 			FILE_MAP_ALL_ACCESS,    // READ & WRITE Permission
 			0,                      // Mapping Offset
 			0,                      // Mapping Offset
@@ -147,7 +256,7 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 		);
 		OutputDebugString(L"Map Shared Memory Failed, Retry...\n");
 
-		if (pBuf != NULL) {
+		if (G_pBuf != NULL) {
 			// Enter the Main Game-Loop
 			*wannaUpdate = true;
 		}
@@ -155,7 +264,7 @@ void Setup(HWND& hwnd, bool* wannaUpdate) {
 
 	if (*wannaUpdate == true) {
 		// Initialize Process Pipe to ALL 0.
-		memset((void*)pBuf, 0, PIPE_LENGTH);
+		memset((void*)G_pBuf, 0, PIPE_LENGTH);
 
 		// Ensure this value is initialized.
 		fpsLockRate = 60;
@@ -228,6 +337,12 @@ void Update(HWND& hwnd, bool* wannaExit) {
 		}
 	}
 
+	// String Transfer thru Pipe.
+	char* result = Internal_ReceiveString();
+	if (result != nullptr) {
+		DebuggerLog(result);
+	}
+
 	/*
 	** Ever Called Show() in the Client Side?
 	** No : Front Buffer is currently empty, no need to do copying.
@@ -245,7 +360,7 @@ void Update(HWND& hwnd, bool* wannaExit) {
 	else {
 		// RAPID Frame Buffer Copying Using Pointer Technique.
 		int loopTimes = 800 * 600;
-		char* src = ((char*)pBuf) + bufferDelta;  // BGR  BGR  BGR  ; 800x600
+		char* src = ((char*)G_pBuf) + G_bufferDelta;  // BGR  BGR  BGR  ; 800x600
 		char* dst = (char*)image;                 // BGR0 BGR0 BGR0 ; 800x600
 
 		for (int i = 0; i < loopTimes; i++) {
@@ -261,7 +376,7 @@ void Update(HWND& hwnd, bool* wannaExit) {
 		isShowEverCalled = true;
 
 		swapSignal = (unsigned char)0;
-		bufferDelta = bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
+		G_bufferDelta = G_bufferDelta == SIGN_LENGTH ? PAGE_LENGTH + SIGN_LENGTH : SIGN_LENGTH;
 		gotitSignal = (unsigned char)1;
 	}
 
@@ -280,7 +395,7 @@ void Exit() {
 	** --------------------------------------------------
 	*/
 
-	UnmapViewOfFile(pBuf);
-	CloseHandle(hMapFile);
+	UnmapViewOfFile(G_pBuf);
+	CloseHandle(G_hMapFile);
 	OutputDebugString(L"---------- Exited Cleanly. ----------\n");
 }

@@ -98,10 +98,34 @@ typedef struct {
 #define SIGN_LENGTH 8192
 #define PIPE_LENGTH (SIGN_LENGTH+2*PAGE_LENGTH)
 
-// Internal Pipe Signals, SHOULD NOT BE MODIFIED BY USERS!
-#define exitSignal   (((char*)G_pBuf)[ 0])  // [ 0]
-#define swapSignal   (((char*)G_pBuf)[ 1])  // [ 1]
-#define gotitSignal  (((char*)G_pBuf)[ 2])  // [ 2]
+
+/**
+ * @section
+ * Pipe Definitions
+ */
+
+// Internal Definitions
+#define exitSignal     (((char*)G_pBuf)[ 0])   // [ 0]
+#define swapSignal     (((char*)G_pBuf)[ 1])   // [ 1]
+#define gotitSignal    (((char*)G_pBuf)[ 2])   // [ 2]
+
+// User API Definitions
+#define fpsLockRate    (((int* )G_pBuf)[ 3])   // [ 3] [ 4] [ 5] [ 6]
+#define isWinFocus     (((char*)G_pBuf)[ 7])   // [ 7]
+
+#define mouseX         (((int* )G_pBuf)[ 8])   // [ 8] [ 9] [10] [11]
+#define mouseY         (((int* )G_pBuf)[12])   // [12] [13] [14] [15]
+#define isLeftClick    (((char*)G_pBuf)[16])   // [16]
+#define isRightClick   (((char*)G_pBuf)[17])   // [17]
+
+#define keyboard       (((char*)G_pBuf) +18)   // [18] [19] ... [273] (len: 256)
+
+// String Transfer Definition
+#define stringBuf      (((char*)G_pBuf) +274)  // [274] [275] ... [289] (len: 16)
+#define stringLen      (((int* )G_pBuf)[290])  // [290] [291] [292] [293]
+#define invokeTransfer (((char*)G_pBuf)[294])  // [294]
+#define invokeSendBtch (((char*)G_pBuf)[295])  // [295]
+#define invokeReceived (((char*)G_pBuf)[296])  // [296]
 
 
 /**
@@ -111,12 +135,12 @@ typedef struct {
 
 
 // Win32 API Related
-HANDLE  G_hMapFile;
-LPCTSTR G_pBuf;
+HANDLE  G_hMapFile = NULL;  // Shared Memory Handle
+LPCTSTR G_pBuf = NULL;      // Shared Memory Buffer
 unsigned char* G_pixels;
 
 // Process Pipe Offset
-int G_bufferDelta = SIGN_LENGTH;
+int G_bufferDelta = SIGN_LENGTH;  // Start from the first buffer.
 
 
 /**
@@ -208,28 +232,52 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	*pitch = info_header.image_size / info_header.height;
 }
 
+// DISABLE MSVC OPEIMIZATION for Internal_SendString() Function: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+void Internal_SendString(const char* str) {
+	// Invoke a transfer process, sending the length of the string.
+	int length = strlen(str) + 1;
+	stringLen = length;
+	invokeReceived = 0;
+	invokeTransfer = 1;
+	while (!invokeReceived);  // Waiting for feedback
+
+	// Sending the long string batch by batch.
+	int howManyBatch = length / 16 + (length % 16 == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Send a single batch of string.
+		const char* ptr = str + batch * 16;  // Source: Starting Position
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		for (int i = 0; i < 16; i++) {
+			stringBuf[i] = ptr[i];
+			if (ptr[i] == '\0') {
+				break;
+			}
+		}
+
+		// Send the "Send Batch" Signal
+		invokeReceived = 0;
+		invokeSendBtch = 1;
+		while (!invokeReceived);  // Waiting for feedback
+	}
+}
+
+// DISABLE MSVC OPEIMIZATION for Internal_SendString() Function: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
 
 // --------------------------------------------------
 // --------------------------------------------------
 // --------------------------------------------------
 // --------------------------------------------------
 // --------------------------------------------------
-
-
-/**
- * @section
- * User API Definitions
- */
-
-#define fpsLockRate  (((int* )G_pBuf)[ 3])  // [ 3] [ 4] [ 5] [ 6]
-#define isWinFocus   (((char*)G_pBuf)[ 7])  // [ 7]
-
-#define mouseX       (((int* )G_pBuf)[ 8])  // [ 8] [ 9] [10] [11]
-#define mouseY       (((int* )G_pBuf)[12])  // [12] [13] [14] [15]
-#define isLeftClick  (((char*)G_pBuf)[16])  // [16]
-#define isRightClick (((char*)G_pBuf)[17])  // [17]
-
-#define keyboard     (((char*)G_pBuf) +18)  // [18] [19] ... [273]
 
 
 /**
