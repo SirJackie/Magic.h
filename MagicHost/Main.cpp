@@ -50,6 +50,7 @@ bool countReversely = false;
 #define MAX_MUSIC_CHANNELS 128
 Mix_Music* sdlMusicPtr = nullptr;
 Mix_Chunk* sdlChunkPtrs[MAX_MUSIC_CHANNELS] = { nullptr };
+bool isChannelPlaying[MAX_MUSIC_CHANNELS] = { false };
 
 
 /**
@@ -308,13 +309,6 @@ void MagicMusic_Receiver() {
 		char** argv = nullptr;
 		ArgParser(command, &argc, &argv);
 
-		// Output the Parse Result for Debugging.
-		for (int i = 0; i < argc; i++) {
-			DebuggerLog(argv[i]);
-			DebuggerLog(" ");
-		}
-		DebuggerLog("\n");
-
 		//
 		// Process Music Command: START
 		//
@@ -345,12 +339,19 @@ void MagicMusic_Receiver() {
 			int channel = str2int(argv[2]);
 			int times = str2int(argv[4]);
 
-			if (channel == 0) {
-				//Mix_PlayMusic(sdlMusicPtr, -1);
-				Mix_PlayMusic(sdlMusicPtr, times);
+			if (isChannelPlaying[channel] == false) {
+				// If not playing, start playing.
+				isChannelPlaying[channel] = true;
+				if (channel == 0) {
+					Mix_PlayMusic(sdlMusicPtr, times);
+				}
+				else {
+					Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
+				}
 			}
 			else {
-				Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
+				// If playing, DON'T PLAY REPEATEDLY.
+				;
 			}
 		}
 		
@@ -362,11 +363,67 @@ void MagicMusic_Receiver() {
 			}
 			int channel = str2int(argv[2]);
 
-			if (channel == 0) {
-				Mix_HaltMusic();
+			if (isChannelPlaying[channel] == true) {
+				// If playing, stop the music.
+				isChannelPlaying[channel] = false;
+				if (channel == 0) {
+					Mix_HaltMusic();
+				}
+				else {
+					Mix_HaltChannel(channel);
+				}
 			}
 			else {
-				Mix_HaltChannel(channel);
+				// If not playing, DON'T stop in vain.
+				;
+			}
+		}
+
+		// Pause Command; Example:
+		// "pause channel 0"
+		else if (strcmp(argv[0], "pause") == 0) {
+			if (argc != 3) {
+				DebuggerLog("Invalid Args for 'pause' command: Not equal to 3.\n");
+			}
+			int channel = str2int(argv[2]);
+
+			if (isChannelPlaying[channel] == true) {
+				// If playing, pause the music.
+				isChannelPlaying[channel] = false;
+				if (channel == 0) {
+					Mix_PauseMusic();
+				}
+				else {
+					Mix_Pause(channel);
+				}
+			}
+			else {
+				// If not playing, DON'T pause in vain.
+				;
+			}
+		}
+
+		// Resume Command; Example:
+		// "resume channel 0"
+		else if (strcmp(argv[0], "resume") == 0) {
+			if (argc != 3) {
+				DebuggerLog("Invalid Args for 'resume' command: Not equal to 3.\n");
+			}
+			int channel = str2int(argv[2]);
+
+			if (isChannelPlaying[channel] == false) {
+				// If not playing, resume playing.
+				isChannelPlaying[channel] = true;
+				if (channel == 0) {
+					Mix_ResumeMusic();
+				}
+				else {
+					Mix_Resume(channel);
+				}
+			}
+			else {
+				// If playing, DON'T RESUME REPEATEDLY.
+				;
 			}
 		}
 		
