@@ -795,7 +795,223 @@ int main() {
 
 ## 6. 文字显示
 
-暂未实现，请稍等
+### MagicText()
+
+文字显示接口，用于显示文字，支持各种字体前后景色、背景透明、字号、字体样式、加粗、斜体、下划线等：
+
+```c
+void MagicText(const wchar_t* wideCommand);
+```
+
+**参数**
+
+- wideCommand：一个宽字符串，传入文字显示命令（该字符串为宽字符串，**可以支持中文**）
+
+**文字接口介绍**
+
+- Magic 图形框架，定义了一套易于使用的、使用自定义文字终端命令，控制的文字接口API
+- 无需创建和使用任何的变量、对象、函数，即可控制文字的绘制、各种字体样式
+
+**总体使用原则**
+
+- **命令分为 `n` 个部分**，每个部分用空格隔开
+
+- 命令的 `n` 个部分，**不可省略，不可调换顺序，否则都会出错**（未来将支持省略、调换顺序）
+
+- **可以同时显示多个文字**，用通道数来指定。通道共有128个，通道数为0到127
+
+**命令使用方法：**
+
+-----
+
+#### Draw Text 命令：绘制文字
+
+```c
+MagicText(L"draw text channel 0 content \"This is a 有中文的 string.\" x 100 y 100 width 300 height 300 layout wordBreak textColor 255 0 0 bgColor 0 0 255 bgTransparent false");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `draw`，用于唤醒 `draw text` 命令
+
+- 第2部分：字符串 `text`，用于唤醒 `draw text` 命令
+
+- 第3部分：字符串 `channel`，用于指定文字显示通道
+
+- 第4部分：使用哪一个通道（多文本绘制），取值范围0到127
+
+- 第5部分：字符串 `content`，用于指定文字内容
+
+- 第6部分：一个字符串，要绘制的文字内容
+
+  例如：`\"This is a 有中文的 string.\"`（由于双层引号，需要反斜杠转义）
+
+- 第7部分：字符串 `x`，用于指定绘制的横座标
+
+- 第8部分：一个整数，横座标像素值，范围0到800
+
+- 第9部分：字符串 `y`，用于指定绘制的纵座标
+
+- 第10部分：一个整数，纵座标像素值，范围0到600
+
+- 第11部分：字符串 `width`，用于指定绘制的最大宽度
+
+- 第12部分：一个整数，最大宽度像素值
+
+- 第13部分：字符串 `height`，用于指定绘制的最大高度
+
+- 第14部分：一个整数，最大高度像素值
+
+- 第15部分：字符串 `layout`，用于指定**字体样式**
+
+- 第16部分：一个字符串，说明你需要什么样的字体样式，5选1，单选：
+
+  `clip`：超过最大宽度/高度，**截断裁剪**，确保文字不会溢出
+
+  `wordBreak`：超过最大宽度/高度，**自动换行**，最后一个字符成为下一行第一个字符
+
+  `ellipsis`：超过最大宽度/高度，**显示省略号**，不显示超出的字符
+
+  `center`：**普通居中模式**，文字横向居中，纵向不居中，支持多行
+
+  `singleLine`：**单行居中模式**，文字横向居中，纵向也居中，但不能支持多行
+
+- 第17部分：字符串 `textColor`，用于指定**字体颜色**
+
+- 第18-20部分：三个整数，分别代表颜色的RGB值
+
+- 第21部分：字符串 `bgColor`，用于指定字体**背景颜色**
+
+- 第22-24部分：三个整数，分别代表颜色的RGB值
+
+- 第25部分：字符串 `bgTransparent`，用于**背景是否透明**
+
+- 第26部分：一个布尔值，`true` 或 `false`，是否背景透明
+
+#### Delete Text 命令：删除文字
+
+```c
+MagicText(L"delete text channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `delete`，用于唤醒 `delete text` 命令
+- 第2部分：字符串 `text`，用于唤醒 `delete text` 命令
+- 第3部分：字符串 `channel`，用于指定文字显示通道
+- 第4部分：使用哪一个通道（多文本绘制），取值范围0到127
+
+#### Set Font 命令：设置字体
+
+```c
+MagicText(L"set font channel 0 fontSize 20 fontFamily \"黑体\" fontItalic false fontBold false fontUnderline false");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `set`，用于唤醒 `set font` 命令
+
+- 第2部分：字符串 `font`，用于唤醒 `set font` 命令
+
+- 第3部分：字符串 `channel`，用于指定文字显示通道
+
+- 第4部分：使用哪一个通道（多文本绘制），取值范围0到127
+
+- 第5部分：字符串 `fontSize`，用于指定字体大小（字号）
+
+- 第6部分：一个整数，字体大小的像素数
+
+- 第7部分：字符串 `fontFamily`，用于指定字体样式（什么字体）
+
+- 第8部分：一个引号包裹的字符串，指定字体名称
+
+  例如：`\"黑体\"`（由于双层引号，需要反斜杠转义）
+
+- 第9部分：字符串 `fontItalic`，用于指定字体是否倾斜（斜体）
+
+- 第10部分：一个布尔值，`true` 或 `false`，是否开启斜体
+
+- 第11部分：字符串 `fontBold`，用于指定字体是否加粗（粗体）
+
+- 第12部分：一个布尔值，`true` 或 `false`，是否开启粗体
+
+- 第13部分：字符串 `fontUnderline`，用于指定字体是否加下划线
+
+- 第14部分：一个布尔值，`true` 或 `false`，是否开启下划线
+
+#### Restore Font 命令：恢复默认字体
+
+```c
+MagicText(L"restore font channel 0");
+```
+
+各部分填写方法：
+
+- 第1部分：字符串 `restore`，用于唤醒 `restore font` 命令
+- 第2部分：字符串 `font`，用于唤醒 `restore font` 命令
+- 第3部分：字符串 `channel`，用于指定文字显示通道
+- 第4部分：使用哪一个通道（多文本绘制），取值范围0到127
+
+-----
+
+**返回值**
+
+无
+
+<u>虽然没有返回值，但当出现错误（命令非法 / 命令参数不对）时，会自动在命令行显示错误信息，供开发者检查。</u>
+
+**示例1**
+
+```c
+#include <stdio.h>
+#include "Magic.h"
+
+int main() {
+	Magic();
+	int count = 0;
+
+	while (true) {
+		if (count % 200 == 0) {
+			MagicText(L"draw text channel 0 content \"This is a 有中文的 string.\" x 100 y 100 width 100 height 100 layout wordbreak textColor 255 0 0 bgColor 0 0 255 bgTransparent false");
+		}
+		if (count % 200 == 100) {
+			MagicText(L"delete text channel 0");
+		}
+
+		Fill(100, 100, 200, 200, 255, 255, 255);
+		count++;
+		Show();
+	}
+}
+```
+
+**示例2**
+
+```c
+#include <stdio.h>
+#include "Magic.h"
+
+int main() {
+	Magic();
+	MagicText(L"draw text channel 0 content \"This is a 有中文的 string.\" x 100 y 100 width 100 height 100 layout wordbreak textColor 255 0 0 bgColor 0 0 255 bgTransparent false");
+	int count = 0;
+
+	while (true) {
+		if (count % 100 == 0) {
+			MagicText(L"set font channel 0 fontSize 20 fontFamily \"黑体\" fontItalic false fontBold false fontUnderline false");
+		}
+		if (count % 100 == 50) {
+			MagicText(L"restore font channel 0");
+		}
+
+		Fill(100, 100, 200, 200, 255, 255, 255);
+		count++;
+		Show();
+	}
+
+	MagicText(L"delete text channel 0");
+}
+```
 
 ## 7. 键盘鼠标检测
 
