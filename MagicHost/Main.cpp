@@ -692,7 +692,89 @@ void MagicText_Receiver() {
 		// Process Text Command: START
 		//
 
-		DebuggerLogW(wideCommand);
+		// Delete Text Command (4 Args); Example:
+		// L"delete text channel 0"
+		if (wcscmp(argv[0], L"delete") == 0 && wcscmp(argv[1], L"text") == 0) {
+			if (argc != 4) {
+				DebuggerLog("Invalid Args for 'delete text' command: Not equal to 4.\n");
+			}
+			int channel = str2intW(argv[3]);
+			textEnabled[channel] = false;
+		}
+
+		// Draw Text Command (26 Args); Example:
+		// L"draw text channel 0 content "STRING" x 100 y 100 width 300 height 300 layout wordBreak textColor 255 0 0 bgColor 0 0 255 bgTransparent false"
+		else if (wcscmp(argv[0], L"draw") == 0 && wcscmp(argv[1], L"text") == 0) {
+			if (argc != 26) {
+				DebuggerLog("Invalid Args for 'draw text' command: Not equal to 26.\n");
+			}
+
+			// L"channel 0"
+			int channel = str2intW(argv[3]);
+			textEnabled[channel] = true;
+
+			// L"content "STRING""
+			wchar_t* content = argv[5];
+			if (textPointers[channel] != nullptr) {
+				delete[] textPointers[channel];
+				textPointers[channel] = nullptr;
+			}
+			textPointers[channel] = new wchar_t[wcslen(content) + 1];
+			wcscpy(textPointers[channel], content);
+
+			// L"x 100 y 100 width 300 height 300"
+			int x = str2intW(argv[7]);
+			int y = str2intW(argv[9]);
+			int width = str2intW(argv[11]);
+			int height = str2intW(argv[13]);
+
+			textX[channel] = x;
+			textY[channel] = y;
+			textWidth[channel] = width;
+			textHeight[channel] = height;
+
+			// L"layout wordbreak"
+			wchar_t* layout = argv[15];
+			if (wcscmp(layout, L"wordBreak") == 0) {
+				textLayout[channel] = WORDBREAK;
+			}
+			else if (wcscmp(layout, L"ellipsis") == 0) {
+				textLayout[channel] = ELLIPSIS;
+			}
+			else if (wcscmp(layout, L"center") == 0) {
+				textLayout[channel] = CENTER;
+			}
+			else if (wcscmp(layout, L"singleLine") == 0) {
+				textLayout[channel] = SINGLE_LINE;
+			}
+
+			// L"textColor 255 0 0"
+			int textR = str2intW(argv[17]);
+			int textG = str2intW(argv[18]);
+			int textB = str2intW(argv[19]);
+
+			textColorR[channel] = textR;
+			textColorG[channel] = textG;
+			textColorB[channel] = textB;
+
+			// L"bgColor 0 0 255"
+			int bgR = str2intW(argv[21]);
+			int bgG = str2intW(argv[22]);
+			int bgB = str2intW(argv[23]);
+
+			bgColorR[channel] = bgR;
+			bgColorG[channel] = bgG;
+			bgColorB[channel] = bgB;
+
+			// L"bgTransparent false"
+			wchar_t* bgTransparentWideStr = argv[25];
+			if (wcscmp(bgTransparentWideStr, L"false") == 0) {
+				bgTransparent[channel] = false;
+			}
+			else {
+				bgTransparent[channel] = true;
+			}
+		}
 
 		//
 		// Process Text Command: END
