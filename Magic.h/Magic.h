@@ -527,6 +527,13 @@ inline unsigned char MagicGetB(int x, int y) {
 #pragma optimize( "", off )
 #endif
 
+/**
+ * @brief: The Audio Interface provided by Magic.h
+ * @param command: The command to send.
+ *                 For details, please view the API Docs.
+ * @return void
+ */
+
 void MagicMusic(const char* command) {
 
 	// Invoke Music Interface
