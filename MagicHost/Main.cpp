@@ -308,6 +308,19 @@ int strFindSpaceOrZero(const char* str) {
 	}
 }
 
+int strFindSpaceOrZeroW(const wchar_t* str) {
+	int i = 0;
+	while (true) {
+		if (str[i] == L' ') {
+			return i;
+		}
+		if (str[i] == L'\0') {
+			return -1;
+		}
+		i++;
+	}
+}
+
 void strcpy_firstN(char* dst, const char* src, int n) {
 	for (int i = 0; i < n; i++) {
 		dst[i] = src[i];
@@ -315,9 +328,22 @@ void strcpy_firstN(char* dst, const char* src, int n) {
 	dst[n] = '\0';
 }
 
+void wcsncpy_firstN(wchar_t* dst, const wchar_t* src, int n) {
+	for (int i = 0; i < n; i++) {
+		dst[i] = src[i];
+	}
+	dst[n] = L'\0';
+}
+
 int str2int(const char* str) {
 	int result;
 	sscanf_s(str, "%d", &result);
+	return result;
+}
+
+int str2intW(const wchar_t* str) {
+	int result;
+	swscanf_s(str, L"%d", &result);
 	return result;
 }
 
@@ -387,7 +413,80 @@ void ArgParser(const char* command, int* argcPtr, char*** argvPtr) {
 	}
 }
 
+void ArgParserW(const wchar_t* command, int* argcPtr, wchar_t*** argvPtr) {
+	// Allocate a String Pointer List for argv
+	(*argvPtr) = new wchar_t* [MAX_ARG_PARSE_AMOUNT];
+	for (int i = 0; i < MAX_ARG_PARSE_AMOUNT; i++) {
+		(*argvPtr)[i] = nullptr;
+	}
+
+	const wchar_t* ptr = command;
+	int spaceIdx = 0;
+	bool inQuotes = false;
+	wchar_t quoteChar = L'\0'; // Tracks which quote type we're inside of
+
+	while (*ptr != L'\0') {
+		while (iswspace(*ptr)) {
+			ptr++; // Skip leading spaces
+		}
+
+		if (*ptr == L'\0') {
+			break;
+		}
+
+		const wchar_t* start = ptr;
+		if (*ptr == L'"' || *ptr == L'\'') {
+			inQuotes = true;
+			quoteChar = *ptr;
+			start++; // Skip the opening quote
+			ptr++;
+			while (*ptr != L'\0' && *ptr != quoteChar) {
+				ptr++;
+			}
+
+			if (*ptr == quoteChar) {
+				inQuotes = false;
+				int length = ptr - start;
+				(*argvPtr)[*argcPtr] = new wchar_t[length + 1];
+				wcsncpy((*argvPtr)[*argcPtr], start, length);
+				(*argvPtr)[*argcPtr][length] = L'\0';
+				(*argcPtr)++;
+				ptr++; // Skip the closing quote
+			}
+		}
+		else {
+			spaceIdx = strFindSpaceOrZeroW(ptr);
+			if (spaceIdx != -1) { // First N Args
+				(*argvPtr)[*argcPtr] = new wchar_t[spaceIdx + 1];
+				wcsncpy_firstN((*argvPtr)[*argcPtr], ptr, spaceIdx);
+				(*argcPtr)++;
+				ptr += spaceIdx;
+			}
+			else { // Last Arg
+				int bufSize = wcslen(ptr) + 1;
+				(*argvPtr)[*argcPtr] = new wchar_t[bufSize];
+				wcscpy_s((*argvPtr)[*argcPtr], bufSize, ptr);
+				(*argcPtr)++;
+				break;
+			}
+		}
+
+		while (iswspace(*ptr)) {
+			ptr++; // Skip trailing spaces
+		}
+	}
+}
+
 void ArgParser_Freer(int* argcPtr, char*** argvPtr) {
+	for (int i = 0; i < (*argcPtr); i++) {
+		delete[](*argvPtr)[i];
+		(*argvPtr)[i] = nullptr;
+	}
+	delete[](*argvPtr);
+	(*argvPtr) = nullptr;
+}
+
+void ArgParserW_Freer(int* argcPtr, wchar_t*** argvPtr) {
 	for (int i = 0; i < (*argcPtr); i++) {
 		delete[] (*argvPtr)[i];
 		(*argvPtr)[i] = nullptr;
