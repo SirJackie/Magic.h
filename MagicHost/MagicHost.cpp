@@ -65,7 +65,38 @@ void Render(HWND hwnd) {
 	// 将内存DC的内容绘制到窗口DC上
 	BitBlt(hdc, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, memDC, 0, 0, SRCCOPY);
 
-	DrawTextW(hdc, L"This is a string.", -1, &pos, NULL);
+	// 设置文本颜色为红色
+	SetTextColor(hdc, RGB(255, 0, 0));
+
+	// 设置背景颜色为蓝色
+	SetBkColor(hdc, RGB(0, 0, 255));
+	SetBkMode(hdc, TRANSPARENT);
+	SetBkMode(hdc, OPAQUE);
+	SetBkColor(hdc, RGB(0, 0, 255));
+
+	HFONT hFont = CreateFont(
+		-60,                // 字体高度（负值表示以像素为单位）
+		0,                  // 字体宽度（0 表示自动计算）
+		0,                  // 字体的倾斜角度
+		0,                  // 字体的基线角度
+		FW_NORMAL,          // 字体粗细（FW_NORMAL = 常规，FW_BOLD = 粗体）
+		FALSE,              // 是否斜体
+		FALSE,              // 是否有下划线
+		FALSE,              // 是否有删除线
+		DEFAULT_CHARSET,    // 字符集
+		OUT_DEFAULT_PRECIS, // 输出精度
+		CLIP_DEFAULT_PRECIS,// 裁剪精度
+		DEFAULT_QUALITY,    // 输出质量
+		DEFAULT_PITCH | FF_SWISS, // 字体间距和族类
+		L"黑体"            // 字体名称
+	);
+
+	SelectObject(hdc, hFont);
+
+	// 绘制文本
+	DrawTextW(hdc, L"This is a 有中文的 string.\nAnother Line.", -1, &pos, DT_CENTER);
+
+	DeleteObject(hFont);
 
 	// 释放资源
 	DeleteObject(hBitmap);
