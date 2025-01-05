@@ -33,6 +33,9 @@ wchar_t wideBuffer[WIDE_BUFFER_LEN];
 
 char keyboardBuffer[256];
 
+RECT pos = {
+	0, 0, 800, 600
+};
 
 // 渲染函数
 void Render(HWND hwnd) {
@@ -61,6 +64,8 @@ void Render(HWND hwnd) {
 
 	// 将内存DC的内容绘制到窗口DC上
 	BitBlt(hdc, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, memDC, 0, 0, SRCCOPY);
+
+	DrawTextW(hdc, L"This is a string.", -1, &pos, NULL);
 
 	// 释放资源
 	DeleteObject(hBitmap);
