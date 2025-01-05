@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <wchar.h>
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include "Main.h"
@@ -205,6 +206,57 @@ char* Internal_ReceiveString() {
 		for (int i = 0; i < 16; i++) {
 			ptr[i] = stringBuf[i];
 			if (stringBuf[i] == '\0') {
+				break;
+			}
+		}
+
+		// Process Invoke Signal
+		invokeSendBtch = 0;
+		invokeReceived = 1;
+	}
+
+	return dest;
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+#define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
+
+wchar_t* Internal_ReceiveStringW() {
+
+	// Wait for Invoke Signal
+	while (invokeTransfer == 0);
+
+	// Receive the length of the string
+	int length = stringLen;
+
+	// Process Invoke Signal
+	invokeTransfer = 0;
+	invokeReceived = 1;
+
+	// Allocate Memory
+	wchar_t* dest = new wchar_t[length + 1];
+
+	// Receiving the long string batch by batch.
+	int howManyBatch = length / WIDE_PIPE_SIZE + (length % WIDE_PIPE_SIZE == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Wait for Invoke Signal
+		while (invokeSendBtch == 0);
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		wchar_t* ptr = dest + batch * WIDE_PIPE_SIZE;  // Destination: Starting Position
+		for (int i = 0; i < WIDE_PIPE_SIZE; i++) {
+			ptr[i] = ((wchar_t*)stringBuf)[i];
+			if (((wchar_t*)stringBuf)[i] == L'\0') {
 				break;
 			}
 		}
@@ -460,6 +512,48 @@ void MagicMusic_Receiver() {
 #pragma optimize( "", on )
 #endif
 
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+void MagicText_Receiver() {
+	// Process Invoke Signal
+	if (invokeText == 1) {
+
+		// Process Invoke Signal
+		invokeText = 0;
+		invokeReceived = 1;
+
+		// String Transfer thru Pipe.
+		wchar_t* wideCommand = Internal_ReceiveStringW();
+
+		//// Parse arguments in the command.
+		//int argc = 0;
+		//char** argv = nullptr;
+		//ArgParser(command, &argc, &argv);
+
+		//
+		// Process Text Command: START
+		//
+
+		DebuggerLogW(wideCommand);
+
+		//
+		// Process Text Command: END
+		//
+
+		//// Release Allocated Memory
+		//ArgParser_Freer(&argc, &argv);
+		//delete[] command;
+	}
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
 
 /**
  * @section
@@ -593,6 +687,7 @@ void Update(HWND& hwnd, bool* wannaExit) {
 
 	// String Interface thru Pipe.
 	MagicMusic_Receiver();
+	MagicText_Receiver();
 
 	/*
 	** Ever Called Show() in the Client Side?

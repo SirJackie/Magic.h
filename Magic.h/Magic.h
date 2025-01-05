@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <process.h>
+#include <wchar.h>
 
 
 /**
@@ -263,6 +264,53 @@ void Internal_SendString(const char* str) {
 		for (int i = 0; i < 16; i++) {
 			stringBuf[i] = ptr[i];
 			if (ptr[i] == '\0') {
+				break;
+			}
+		}
+
+		// Invoke "Send Batch" Signal
+		invokeReceived = 0;
+		invokeSendBtch = 1;
+		while (invokeReceived == 0);  // Wait for Response
+		invokeReceived = 0;
+	}
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+#define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
+
+void Internal_SendStringW(const wchar_t* wideStr) {
+
+	// Save the length of the string to pipe.
+	int length = wcslen(wideStr) + 1;
+	stringLen = length;
+
+	// Invoke String Transfer
+	invokeReceived = 0;
+	invokeTransfer = 1;
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
+
+	// Sending the long string batch by batch.
+	int howManyBatch = length / WIDE_PIPE_SIZE + (length % WIDE_PIPE_SIZE == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Send a single batch of string.
+		const wchar_t* ptr = wideStr + batch * WIDE_PIPE_SIZE;  // Source: Starting Position
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		for (int i = 0; i < WIDE_PIPE_SIZE; i++) {
+			((wchar_t*)stringBuf)[i] = ptr[i];
+			if (ptr[i] == L'\0') {
 				break;
 			}
 		}
@@ -544,6 +592,35 @@ void MagicMusic(const char* command) {
 
 	// Transfer the Commands
 	Internal_SendString(command);
+}
+
+// DISABLE MSVC OPEIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPEIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+/**
+ * @brief: The Text Interface provided by Magic.h
+ * @param command: The command to send.
+ *                 For details, please view the API Docs.
+ * @return void
+ */
+
+void MagicText(const wchar_t* wideCommand) {
+
+	// Invoke Music Interface
+	invokeReceived = 0;
+	invokeText = 1;
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
+
+	// Transfer the Commands
+	Internal_SendStringW(wideCommand);
 }
 
 // DISABLE MSVC OPEIMIZATION: END
