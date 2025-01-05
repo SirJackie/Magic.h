@@ -33,9 +33,8 @@ wchar_t wideBuffer[WIDE_BUFFER_LEN];
 
 char keyboardBuffer[256];
 
-RECT pos = {
-	0, 0, 800, 600
-};
+RECT thisTextPos;
+UINT thisTextLayout;
 
 // 渲染函数
 void Render(HWND hwnd) {
@@ -64,38 +63,59 @@ void Render(HWND hwnd) {
 
 	// -----
 
-	// 设置文本颜色为红色
-	SetTextColor(memDC, RGB(255, 0, 0));
+	// 依次绘制Magic文字接口传输过来的文字
 
-	// 设置背景颜色为蓝色
-	SetBkColor(memDC, RGB(0, 0, 255));
-	SetBkMode(memDC, TRANSPARENT);
-	SetBkMode(memDC, OPAQUE);
-	SetBkColor(memDC, RGB(0, 0, 255));
+	for (int i = 0; i < MAX_TEXT_CHANNELS; i++) {
+		if (textEnabled[i]) {
 
-	HFONT hFont = CreateFont(
-		-60,                // 字体高度（负值表示以像素为单位）
-		0,                  // 字体宽度（0 表示自动计算）
-		0,                  // 字体的倾斜角度
-		0,                  // 字体的基线角度
-		FW_NORMAL,          // 字体粗细（FW_NORMAL = 常规，FW_BOLD = 粗体）
-		FALSE,              // 是否斜体
-		FALSE,              // 是否有下划线
-		FALSE,              // 是否有删除线
-		DEFAULT_CHARSET,    // 字符集
-		OUT_DEFAULT_PRECIS, // 输出精度
-		CLIP_DEFAULT_PRECIS,// 裁剪精度
-		DEFAULT_QUALITY,    // 输出质量
-		DEFAULT_PITCH | FF_SWISS, // 字体间距和族类
-		L"黑体"            // 字体名称
-	);
+			// 决定文本颜色
+			SetTextColor(
+				memDC, RGB(
+					textColorR[i],
+					textColorG[i],
+					textColorB[i]
+				)
+			);
 
-	SelectObject(memDC, hFont);
+			// 决定背景颜色
+			SetBkColor(
+				memDC, RGB(
+					bgColorR[i],
+					bgColorG[i],
+					bgColorB[i]
+				)
+			);
 
-	// 绘制文本
-	DrawTextW(memDC, L"This is a 有中文的 string.\nAnother Line.", -1, &pos, DT_CENTER);
+			// 决定背景透明
+			if (bgTransparent[i]) {
+				SetBkMode(memDC, TRANSPARENT);
+			}
+			else {
+				SetBkMode(memDC, OPAQUE);
+			}
 
-	DeleteObject(hFont);
+			// 决定文本位置
+			thisTextPos.left = textX[i];
+			thisTextPos.top = textY[i];
+			thisTextPos.right = textX[i] + textWidth[i];
+			thisTextPos.bottom = textY[i] + textHeight[i];
+			
+			// 决定文字格式
+			switch (textLayout[i]) {
+			case WORDBREAK:
+				thisTextLayout = DT_WORDBREAK;
+			case ELLIPSIS:
+				thisTextLayout = DT_END_ELLIPSIS;
+			case CENTER:
+				thisTextLayout = DT_CENTER;
+			case SINGLE_LINE:
+				thisTextLayout = DT_CENTER | DT_VCENTER | DT_SINGLELINE;
+			}
+
+			// 绘制文本
+			DrawTextW(memDC, textPointers[i], -1, &thisTextPos, thisTextLayout);
+		}
+	}
 
 	// -----
 

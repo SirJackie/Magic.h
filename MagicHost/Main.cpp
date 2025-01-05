@@ -48,10 +48,29 @@ float sinCurver = 0.0f;
 bool countReversely = false;
 
 // For Music Interface
-#define MAX_MUSIC_CHANNELS 128
+
 Mix_Music* sdlMusicPtr = nullptr;
 Mix_Chunk* sdlChunkPtrs[MAX_MUSIC_CHANNELS] = { nullptr };
 bool isChannelPlaying[MAX_MUSIC_CHANNELS] = { false };
+
+// For Text Interface
+bool textEnabled[MAX_TEXT_CHANNELS] = { false };
+wchar_t* textPointers[MAX_TEXT_CHANNELS] = { nullptr };
+
+unsigned char textColorR[MAX_TEXT_CHANNELS] = { 0 };
+unsigned char textColorG[MAX_TEXT_CHANNELS] = { 0 };
+unsigned char textColorB[MAX_TEXT_CHANNELS] = { 0 };
+
+unsigned char bgColorR[MAX_TEXT_CHANNELS] = { 0 };
+unsigned char bgColorG[MAX_TEXT_CHANNELS] = { 0 };
+unsigned char bgColorB[MAX_TEXT_CHANNELS] = { 0 };
+bool bgTransparent[MAX_TEXT_CHANNELS] = { false };
+
+int textX[MAX_TEXT_CHANNELS] = { 0 };
+int textY[MAX_TEXT_CHANNELS] = { 0 };
+int textWidth[MAX_TEXT_CHANNELS] = { 0 };
+int textHeight[MAX_TEXT_CHANNELS] = { 0 };
+TextLayout textLayout[MAX_TEXT_CHANNELS] = { WORDBREAK };
 
 
 /**
