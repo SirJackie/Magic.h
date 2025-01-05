@@ -330,22 +330,57 @@ void ArgParser(const char* command, int* argcPtr, char*** argvPtr) {
 
 	const char* ptr = command;
 	int spaceIdx = 0;
+	bool inQuotes = false;
+	char quoteChar = '\0'; // Tracks which quote type we're inside of
 
-	while (true) {
-		spaceIdx = strFindSpaceOrZero(ptr);
-
-		if (spaceIdx != -1) {  // First N Args
-			*argcPtr += 1;
-			(*argvPtr)[(*argcPtr) - 1] = new char[spaceIdx + (long long)1];
-			strcpy_firstN((*argvPtr)[(*argcPtr) - 1], ptr, spaceIdx);
-			ptr = ptr + spaceIdx + 1;
+	while (*ptr != '\0') {
+		while (isspace(*ptr)) {
+			ptr++; // Skip leading spaces
 		}
-		else if (spaceIdx == -1) {  // Last 1 Arg
-			*argcPtr += 1;
-			int bufSize = strlen(ptr) + (long long)1;
-			(*argvPtr)[(*argcPtr) - 1] = new char[bufSize];
-			strcpy_s((*argvPtr)[(*argcPtr) - 1], bufSize, ptr);
+
+		if (*ptr == '\0') {
 			break;
+		}
+
+		const char* start = ptr;
+		if (*ptr == '"' || *ptr == '\'') {
+			inQuotes = true;
+			quoteChar = *ptr;
+			start++; // Skip the opening quote
+			ptr++;
+			while (*ptr != '\0' && *ptr != quoteChar) {
+				ptr++;
+			}
+
+			if (*ptr == quoteChar) {
+				inQuotes = false;
+				int length = ptr - start;
+				(*argvPtr)[*argcPtr] = new char[length + 1];
+				strncpy((*argvPtr)[*argcPtr], start, length);
+				(*argvPtr)[*argcPtr][length] = '\0';
+				(*argcPtr)++;
+				ptr++; // Skip the closing quote
+			}
+		}
+		else {
+			spaceIdx = strFindSpaceOrZero(ptr);
+			if (spaceIdx != -1) { // First N Args
+				(*argvPtr)[*argcPtr] = new char[spaceIdx + 1];
+				strcpy_firstN((*argvPtr)[*argcPtr], ptr, spaceIdx);
+				(*argcPtr)++;
+				ptr += spaceIdx;
+			}
+			else { // Last Arg
+				int bufSize = strlen(ptr) + 1;
+				(*argvPtr)[*argcPtr] = new char[bufSize];
+				strcpy_s((*argvPtr)[*argcPtr], bufSize, ptr);
+				(*argcPtr)++;
+				break;
+			}
+		}
+
+		while (isspace(*ptr)) {
+			ptr++; // Skip trailing spaces
 		}
 	}
 }
