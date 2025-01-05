@@ -244,10 +244,17 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 
 #define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
 
- // DISABLE MSVC OPTIMIZATION: START
+// DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
+
+/**
+ * @brief: Internal string sending function.
+ * @SHOULD NOT BE CALLED BY USERS!
+ * @param *str: The string to send.
+ * @return void
+ */
 
 void Internal_SendString(const char* str) {
 
@@ -294,6 +301,13 @@ void Internal_SendString(const char* str) {
 #pragma optimize( "", off )
 #endif
 
+/**
+ * @brief: Internal wide string sending function.
+ * @SHOULD NOT BE CALLED BY USERS!
+ * @param *str: The wide string to send.
+ * @return void
+ */
+
 void Internal_SendStringW(const wchar_t* wideStr) {
 
 	// Save the length of the string to pipe.
@@ -338,6 +352,13 @@ void Internal_SendStringW(const wchar_t* wideStr) {
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
+
+/**
+ * @brief: Internal string receiving function.
+ * @SHOULD NOT BE CALLED BY USERS!
+ * @param *str: The string to receive.
+ * @return void
+ */
 
 char* Internal_ReceiveString() {
 
@@ -387,6 +408,13 @@ char* Internal_ReceiveString() {
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
+
+/**
+ * @brief: Internal wide string receiving function.
+ * @SHOULD NOT BE CALLED BY USERS!
+ * @param *str: The wide string to receive.
+ * @return void
+ */
 
 wchar_t* Internal_ReceiveStringW() {
 
