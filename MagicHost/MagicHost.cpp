@@ -99,6 +99,20 @@ void Render(HWND hwnd) {
 		invokeInternalFontCreator = 0;
 	}
 
+	// 处理原有字体删除
+	if (invokeInternalFontDeletor == 1) {
+
+		// 如果之前，这个字体指针已经创建过字体
+		if (fontEnabled[invokeFontChannel] == true) {
+			SelectObject(memDC, defaultFontPtr);        // 恢复默认字体
+			DeleteObject(fontPtrs[invokeFontChannel]);  // 删除字体对象
+			fontEnabled[invokeFontChannel] = false;     // 指针标识恢复空状态
+		}
+
+		// 处理完毕，禁用invoke信号
+		invokeInternalFontDeletor = 0;
+	}
+
 	// 依次绘制Magic文字接口传输过来的文字
 
 	for (int i = 0; i < MAX_TEXT_CHANNELS; i++) {

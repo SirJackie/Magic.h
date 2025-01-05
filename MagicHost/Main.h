@@ -41,6 +41,7 @@ extern HFONT defaultFontPtr;
 extern HFONT fontPtrs[];
 
 extern unsigned char invokeInternalFontCreator;
+extern unsigned char invokeInternalFontDeletor;
 extern int invokeFontChannel;
 extern int invokeFontSize;
 extern bool invokeFontItalic;

@@ -80,6 +80,7 @@ HFONT defaultFontPtr = NULL;
 HFONT fontPtrs[MAX_TEXT_CHANNELS] = { NULL };
 
 unsigned char invokeInternalFontCreator = 0;
+unsigned char invokeInternalFontDeletor = 0;
 int invokeFontChannel = 0;
 int invokeFontSize = 0;
 bool invokeFontItalic = false;
@@ -843,6 +844,20 @@ void MagicText_Receiver() {
 
 			// Send Invokation Signal
 			invokeInternalFontCreator = 1;
+		}
+
+		// Restore Font Command (4 Args); Example:
+		// L"restore font channel 0"
+		else if (wcscmp(argv[0], L"restore") == 0 && wcscmp(argv[1], L"font") == 0) {
+			if (argc != 4) {
+				DebuggerLog("Invalid Args for 'restore font' command: Not equal to 4.\n");
+			}
+
+			// L"channel 0"
+			invokeFontChannel = str2intW(argv[3]);
+
+			// Send Invokation Signal
+			invokeInternalFontDeletor = 1;
 		}
 
 		//
