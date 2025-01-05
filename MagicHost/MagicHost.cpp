@@ -101,15 +101,20 @@ void Render(HWND hwnd) {
 			thisTextPos.bottom = textY[i] + textHeight[i];
 			
 			// 决定文字格式
+			thisTextLayout = 0;  // Important!
 			switch (textLayout[i]) {
 			case WORDBREAK:
 				thisTextLayout = DT_WORDBREAK;
+				break;
 			case ELLIPSIS:
 				thisTextLayout = DT_END_ELLIPSIS;
+				break;
 			case CENTER:
 				thisTextLayout = DT_CENTER;
+				break;
 			case SINGLE_LINE:
 				thisTextLayout = DT_CENTER | DT_VCENTER | DT_SINGLELINE;
+				break;
 			}
 
 			// 绘制文本
