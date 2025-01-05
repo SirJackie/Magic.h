@@ -683,10 +683,10 @@ void MagicText_Receiver() {
 		// String Transfer thru Pipe.
 		wchar_t* wideCommand = Internal_ReceiveStringW();
 
-		//// Parse arguments in the command.
-		//int argc = 0;
-		//char** argv = nullptr;
-		//ArgParser(command, &argc, &argv);
+		// Parse arguments in the command.
+		int argc = 0;
+		wchar_t** argv = nullptr;
+		ArgParserW(wideCommand, &argc, &argv);
 
 		//
 		// Process Text Command: START
@@ -698,9 +698,9 @@ void MagicText_Receiver() {
 		// Process Text Command: END
 		//
 
-		//// Release Allocated Memory
-		//ArgParser_Freer(&argc, &argv);
-		//delete[] command;
+		// Release Allocated Memory
+		ArgParserW_Freer(&argc, &argv);
+		delete[] wideCommand;
 	}
 }
 
