@@ -5,10 +5,11 @@
 #define MAX_TEXT_CHANNELS 128
 
 enum TextLayout {
-	WORDBREAK = 0,   // DT_WORDBREAK
-	ELLIPSIS = 1,    // DT_END_ELLIPSIS
-	CENTER = 2,      // DT_CENTER
-	SINGLE_LINE = 3  // DT_CENTER | DT_VCENTER | DT_SINGLELINE
+	CLIP = 0,        // NULL
+	WORDBREAK = 1,   // DT_WORDBREAK
+	ELLIPSIS = 2,    // DT_END_ELLIPSIS
+	CENTER = 3,      // DT_CENTER
+	SINGLE_LINE = 4  // DT_CENTER | DT_VCENTER | DT_SINGLELINE
 };
 
 void Setup(HWND& hwnd, bool* wannaUpdate);

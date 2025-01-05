@@ -748,7 +748,10 @@ void MagicText_Receiver() {
 
 			// L"layout wordbreak"
 			wchar_t* layout = argv[15];
-			if (wcscmp(layout, L"wordBreak") == 0) {
+			if (wcscmp(layout, L"clip") == 0) {
+				textLayout[channel] = CLIP;
+			}
+			else if (wcscmp(layout, L"wordBreak") == 0) {
 				textLayout[channel] = WORDBREAK;
 			}
 			else if (wcscmp(layout, L"ellipsis") == 0) {

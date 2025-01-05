@@ -147,6 +147,9 @@ void Render(HWND hwnd) {
 			// 决定文字格式
 			thisTextLayout = 0;  // Important!
 			switch (textLayout[i]) {
+			case CLIP:
+				thisTextLayout = NULL;
+				break;
 			case WORDBREAK:
 				thisTextLayout = DT_WORDBREAK;
 				break;
