@@ -696,6 +696,14 @@ void MagicMusic(const char* command) {
 
 	// Transfer the Commands
 	Internal_SendString(command);
+
+	// Receive Feedback
+	char* feedback = Internal_ReceiveString();
+	if (strcmp(feedback, "OK") != 0) {
+		// Error
+		printf("MagicMusic() Error: %s\n", feedback);
+	}
+	delete[] feedback;
 }
 
 // DISABLE MSVC OPEIMIZATION: END
@@ -725,6 +733,14 @@ void MagicText(const wchar_t* wideCommand) {
 
 	// Transfer the Commands
 	Internal_SendStringW(wideCommand);
+
+	// Receive Feedback
+	char* feedback = Internal_ReceiveString();
+	if (strcmp(feedback, "OK") != 0) {
+		// Error
+		printf("MagicText() Error: %s\n", feedback);
+	}
+	delete[] feedback;
 }
 
 // DISABLE MSVC OPEIMIZATION: END

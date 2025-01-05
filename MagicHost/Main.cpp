@@ -642,20 +642,25 @@ void MagicMusic_Receiver() {
 		// Process Music Command: START
 		//
 
+		// Error Handing.
+		const char* errorString = nullptr;
+
 		// Open Command; Example:
 		// "open .\\Music\\bg.wav on_channel 0"
 		if (strcmp(argv[0], "open") == 0) {
 			if (argc != 4) {
-				DebuggerLog("Invalid Args for 'open' command: Not equal to 4.\n");
-			}
-			const char* filename = argv[1];
-			int channel = str2int(argv[3]);
-
-			if (channel == 0) {
-				sdlMusicPtr = Mix_LoadMUS(filename);
+				errorString = "Invalid Args for 'open' command: Not equal to 4.";
 			}
 			else {
-				sdlChunkPtrs[channel] = Mix_LoadWAV(filename);
+				const char* filename = argv[1];
+				int channel = str2int(argv[3]);
+
+				if (channel == 0) {
+					sdlMusicPtr = Mix_LoadMUS(filename);
+				}
+				else {
+					sdlChunkPtrs[channel] = Mix_LoadWAV(filename);
+				}
 			}
 		}
 		
@@ -663,24 +668,26 @@ void MagicMusic_Receiver() {
 		// "play channel 0 times -1"
 		else if (strcmp(argv[0], "play") == 0) {
 			if (argc != 5) {
-				DebuggerLog("Invalid Args for 'play' command: Not equal to 5.\n");
-			}
-			int channel = str2int(argv[2]);
-			int times = str2int(argv[4]);
-
-			if (isChannelPlaying[channel] == false) {
-				// If not playing, start playing.
-				isChannelPlaying[channel] = true;
-				if (channel == 0) {
-					Mix_PlayMusic(sdlMusicPtr, times);
-				}
-				else {
-					Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
-				}
+				errorString = "Invalid Args for 'play' command: Not equal to 5.";
 			}
 			else {
-				// If playing, DON'T PLAY REPEATEDLY.
-				;
+				int channel = str2int(argv[2]);
+				int times = str2int(argv[4]);
+
+				if (isChannelPlaying[channel] == false) {
+					// If not playing, start playing.
+					isChannelPlaying[channel] = true;
+					if (channel == 0) {
+						Mix_PlayMusic(sdlMusicPtr, times);
+					}
+					else {
+						Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
+					}
+				}
+				else {
+					// If playing, DON'T PLAY REPEATEDLY.
+					;
+				}
 			}
 		}
 		
@@ -688,23 +695,25 @@ void MagicMusic_Receiver() {
 		// "stop channel 0"
 		else if (strcmp(argv[0], "stop") == 0) {
 			if (argc != 3) {
-				DebuggerLog("Invalid Args for 'stop' command: Not equal to 3.\n");
-			}
-			int channel = str2int(argv[2]);
-
-			if (isChannelPlaying[channel] == true) {
-				// If playing, stop the music.
-				isChannelPlaying[channel] = false;
-				if (channel == 0) {
-					Mix_HaltMusic();
-				}
-				else {
-					Mix_HaltChannel(channel);
-				}
+				errorString = "Invalid Args for 'stop' command: Not equal to 3.";
 			}
 			else {
-				// If not playing, DON'T stop in vain.
-				;
+				int channel = str2int(argv[2]);
+
+				if (isChannelPlaying[channel] == true) {
+					// If playing, stop the music.
+					isChannelPlaying[channel] = false;
+					if (channel == 0) {
+						Mix_HaltMusic();
+					}
+					else {
+						Mix_HaltChannel(channel);
+					}
+				}
+				else {
+					// If not playing, DON'T stop in vain.
+					;
+				}
 			}
 		}
 
@@ -712,23 +721,25 @@ void MagicMusic_Receiver() {
 		// "pause channel 0"
 		else if (strcmp(argv[0], "pause") == 0) {
 			if (argc != 3) {
-				DebuggerLog("Invalid Args for 'pause' command: Not equal to 3.\n");
-			}
-			int channel = str2int(argv[2]);
-
-			if (isChannelPlaying[channel] == true) {
-				// If playing, pause the music.
-				isChannelPlaying[channel] = false;
-				if (channel == 0) {
-					Mix_PauseMusic();
-				}
-				else {
-					Mix_Pause(channel);
-				}
+				errorString = "Invalid Args for 'pause' command: Not equal to 3.";
 			}
 			else {
-				// If not playing, DON'T pause in vain.
-				;
+				int channel = str2int(argv[2]);
+
+				if (isChannelPlaying[channel] == true) {
+					// If playing, pause the music.
+					isChannelPlaying[channel] = false;
+					if (channel == 0) {
+						Mix_PauseMusic();
+					}
+					else {
+						Mix_Pause(channel);
+					}
+				}
+				else {
+					// If not playing, DON'T pause in vain.
+					;
+				}
 			}
 		}
 
@@ -736,23 +747,25 @@ void MagicMusic_Receiver() {
 		// "resume channel 0"
 		else if (strcmp(argv[0], "resume") == 0) {
 			if (argc != 3) {
-				DebuggerLog("Invalid Args for 'resume' command: Not equal to 3.\n");
-			}
-			int channel = str2int(argv[2]);
-
-			if (isChannelPlaying[channel] == false) {
-				// If not playing, resume playing.
-				isChannelPlaying[channel] = true;
-				if (channel == 0) {
-					Mix_ResumeMusic();
-				}
-				else {
-					Mix_Resume(channel);
-				}
+				errorString = "Invalid Args for 'resume' command: Not equal to 3.";
 			}
 			else {
-				// If playing, DON'T RESUME REPEATEDLY.
-				;
+				int channel = str2int(argv[2]);
+
+				if (isChannelPlaying[channel] == false) {
+					// If not playing, resume playing.
+					isChannelPlaying[channel] = true;
+					if (channel == 0) {
+						Mix_ResumeMusic();
+					}
+					else {
+						Mix_Resume(channel);
+					}
+				}
+				else {
+					// If playing, DON'T RESUME REPEATEDLY.
+					;
+				}
 			}
 		}
 		
@@ -760,23 +773,38 @@ void MagicMusic_Receiver() {
 		// "close channel 0"
 		else if (strcmp(argv[0], "close") == 0) {
 			if (argc != 3) {
-				DebuggerLog("Invalid Args for 'close' command: Not equal to 3.\n");
-			}
-			int channel = str2int(argv[2]);
-
-			if (channel == 0) {
-				Mix_FreeMusic(sdlMusicPtr);
-				sdlMusicPtr = nullptr;
+				errorString = "Invalid Args for 'close' command: Not equal to 3.";
 			}
 			else {
-				Mix_FreeChunk(sdlChunkPtrs[channel]);
-				sdlChunkPtrs[channel] = nullptr;
+				int channel = str2int(argv[2]);
+
+				if (channel == 0) {
+					Mix_FreeMusic(sdlMusicPtr);
+					sdlMusicPtr = nullptr;
+				}
+				else {
+					Mix_FreeChunk(sdlChunkPtrs[channel]);
+					sdlChunkPtrs[channel] = nullptr;
+				}
 			}
+		}
+
+		// Command Not Found Senario
+		else {
+			errorString = "Command Not Found!";
 		}
 
 		//
 		// Process Music Command: END
 		//
+
+		// Send Feedback
+		if (errorString != nullptr) {
+			Internal_SendString(errorString);
+		}
+		else {
+			Internal_SendString("OK");
+		}
 
 		// Release Allocated Memory
 		ArgParser_Freer(&argc, &argv);
@@ -814,80 +842,84 @@ void MagicText_Receiver() {
 		// Process Text Command: START
 		//
 
+		// Error Handing.
+		const char* errorString = nullptr;
+
 		// Draw Text Command (26 Args); Example:
 		// L"draw text channel 0 content "STRING" x 100 y 100 width 300 height 300 layout wordBreak textColor 255 0 0 bgColor 0 0 255 bgTransparent false"
 		if (wcscmp(argv[0], L"draw") == 0 && wcscmp(argv[1], L"text") == 0) {
 			if (argc != 26) {
-				DebuggerLog("Invalid Args for 'draw text' command: Not equal to 26.\n");
-			}
-
-			// L"channel 0"
-			int channel = str2intW(argv[3]);
-			textEnabled[channel] = true;
-
-			// L"content "STRING""
-			wchar_t* content = argv[5];
-			if (textPointers[channel] != nullptr) {
-				delete[] textPointers[channel];
-				textPointers[channel] = nullptr;
-			}
-			textPointers[channel] = new wchar_t[wcslen(content) + 1];
-			wcscpy(textPointers[channel], content);
-
-			// L"x 100 y 100 width 300 height 300"
-			int x = str2intW(argv[7]);
-			int y = str2intW(argv[9]);
-			int width = str2intW(argv[11]);
-			int height = str2intW(argv[13]);
-
-			textX[channel] = x;
-			textY[channel] = y;
-			textWidth[channel] = width;
-			textHeight[channel] = height;
-
-			// L"layout wordbreak"
-			wchar_t* layout = argv[15];
-			if (wcscmp(layout, L"clip") == 0) {
-				textLayout[channel] = CLIP;
-			}
-			else if (wcscmp(layout, L"wordBreak") == 0) {
-				textLayout[channel] = WORDBREAK;
-			}
-			else if (wcscmp(layout, L"ellipsis") == 0) {
-				textLayout[channel] = ELLIPSIS;
-			}
-			else if (wcscmp(layout, L"center") == 0) {
-				textLayout[channel] = CENTER;
-			}
-			else if (wcscmp(layout, L"singleLine") == 0) {
-				textLayout[channel] = SINGLE_LINE;
-			}
-
-			// L"textColor 255 0 0"
-			int textR = str2intW(argv[17]);
-			int textG = str2intW(argv[18]);
-			int textB = str2intW(argv[19]);
-
-			textColorR[channel] = textR;
-			textColorG[channel] = textG;
-			textColorB[channel] = textB;
-
-			// L"bgColor 0 0 255"
-			int bgR = str2intW(argv[21]);
-			int bgG = str2intW(argv[22]);
-			int bgB = str2intW(argv[23]);
-
-			bgColorR[channel] = bgR;
-			bgColorG[channel] = bgG;
-			bgColorB[channel] = bgB;
-
-			// L"bgTransparent false"
-			wchar_t* bgTransparentWideStr = argv[25];
-			if (wcscmp(bgTransparentWideStr, L"false") == 0) {
-				bgTransparent[channel] = false;
+				errorString = "Invalid Args for 'draw text' command: Not equal to 26.";
 			}
 			else {
-				bgTransparent[channel] = true;
+				// L"channel 0"
+				int channel = str2intW(argv[3]);
+				textEnabled[channel] = true;
+
+				// L"content "STRING""
+				wchar_t* content = argv[5];
+				if (textPointers[channel] != nullptr) {
+					delete[] textPointers[channel];
+					textPointers[channel] = nullptr;
+				}
+				textPointers[channel] = new wchar_t[wcslen(content) + 1];
+				wcscpy(textPointers[channel], content);
+
+				// L"x 100 y 100 width 300 height 300"
+				int x = str2intW(argv[7]);
+				int y = str2intW(argv[9]);
+				int width = str2intW(argv[11]);
+				int height = str2intW(argv[13]);
+
+				textX[channel] = x;
+				textY[channel] = y;
+				textWidth[channel] = width;
+				textHeight[channel] = height;
+
+				// L"layout wordbreak"
+				wchar_t* layout = argv[15];
+				if (wcscmp(layout, L"clip") == 0) {
+					textLayout[channel] = CLIP;
+				}
+				else if (wcscmp(layout, L"wordBreak") == 0) {
+					textLayout[channel] = WORDBREAK;
+				}
+				else if (wcscmp(layout, L"ellipsis") == 0) {
+					textLayout[channel] = ELLIPSIS;
+				}
+				else if (wcscmp(layout, L"center") == 0) {
+					textLayout[channel] = CENTER;
+				}
+				else if (wcscmp(layout, L"singleLine") == 0) {
+					textLayout[channel] = SINGLE_LINE;
+				}
+
+				// L"textColor 255 0 0"
+				int textR = str2intW(argv[17]);
+				int textG = str2intW(argv[18]);
+				int textB = str2intW(argv[19]);
+
+				textColorR[channel] = textR;
+				textColorG[channel] = textG;
+				textColorB[channel] = textB;
+
+				// L"bgColor 0 0 255"
+				int bgR = str2intW(argv[21]);
+				int bgG = str2intW(argv[22]);
+				int bgB = str2intW(argv[23]);
+
+				bgColorR[channel] = bgR;
+				bgColorG[channel] = bgG;
+				bgColorB[channel] = bgB;
+
+				// L"bgTransparent false"
+				wchar_t* bgTransparentWideStr = argv[25];
+				if (wcscmp(bgTransparentWideStr, L"false") == 0) {
+					bgTransparent[channel] = false;
+				}
+				else {
+					bgTransparent[channel] = true;
+				}
 			}
 		}
 
@@ -895,82 +927,99 @@ void MagicText_Receiver() {
 		// L"delete text channel 0"
 		else if (wcscmp(argv[0], L"delete") == 0 && wcscmp(argv[1], L"text") == 0) {
 			if (argc != 4) {
-				DebuggerLog("Invalid Args for 'delete text' command: Not equal to 4.\n");
+				errorString = "Invalid Args for 'delete text' command: Not equal to 4.";
 			}
-			int channel = str2intW(argv[3]);
-			textEnabled[channel] = false;
+			else {
+				int channel = str2intW(argv[3]);
+				textEnabled[channel] = false;
+			}
 		}
 
 		// Set Font Command (14 Args); Example:
 		// L"set font channel 0 fontSize 20 fontFamily "ºÚÌå" fontItalic false fontBold false fontUnderline false"
 		else if (wcscmp(argv[0], L"set") == 0 && wcscmp(argv[1], L"font") == 0) {
 			if (argc != 14) {
-				DebuggerLog("Invalid Args for 'set font' command: Not equal to 14.\n");
-			}
-
-			// L"channel 0"
-			invokeFontChannel = str2intW(argv[3]);
-
-			// L"fontSize 20"
-			invokeFontSize = str2intW(argv[5]);
-
-			// L"fontFamily "ºÚÌå""
-			if (invokeFontFamily != nullptr) {
-				delete[] invokeFontFamily;
-				invokeFontFamily = nullptr;
-			}
-			wchar_t* fontFamily = argv[7];
-			invokeFontFamily = new wchar_t[wcslen(fontFamily) + 1];
-			wcscpy(invokeFontFamily, fontFamily);
-
-			// L"fontItalic false"
-			wchar_t* fontItalic = argv[9];
-			if (wcscmp(fontItalic, L"false") == 0) {
-				invokeFontItalic = false;
+				errorString = "Invalid Args for 'set font' command: Not equal to 14.";
 			}
 			else {
-				invokeFontItalic = true;
-			}
+				// L"channel 0"
+				invokeFontChannel = str2intW(argv[3]);
 
-			// L"fontBold false"
-			wchar_t* fontBold = argv[11];
-			if (wcscmp(fontBold, L"false") == 0) {
-				invokeFontBold = false;
-			}
-			else {
-				invokeFontBold = true;
-			}
+				// L"fontSize 20"
+				invokeFontSize = str2intW(argv[5]);
 
-			// L"fontUnderline false"
-			wchar_t* fontUnderline = argv[13];
-			if (wcscmp(fontUnderline, L"false") == 0) {
-				invokeFontUnderline = false;
-			}
-			else {
-				invokeFontUnderline = true;
-			}
+				// L"fontFamily "ºÚÌå""
+				if (invokeFontFamily != nullptr) {
+					delete[] invokeFontFamily;
+					invokeFontFamily = nullptr;
+				}
+				wchar_t* fontFamily = argv[7];
+				invokeFontFamily = new wchar_t[wcslen(fontFamily) + 1];
+				wcscpy(invokeFontFamily, fontFamily);
 
-			// Send Invokation Signal
-			invokeInternalFontCreator = 1;
+				// L"fontItalic false"
+				wchar_t* fontItalic = argv[9];
+				if (wcscmp(fontItalic, L"false") == 0) {
+					invokeFontItalic = false;
+				}
+				else {
+					invokeFontItalic = true;
+				}
+
+				// L"fontBold false"
+				wchar_t* fontBold = argv[11];
+				if (wcscmp(fontBold, L"false") == 0) {
+					invokeFontBold = false;
+				}
+				else {
+					invokeFontBold = true;
+				}
+
+				// L"fontUnderline false"
+				wchar_t* fontUnderline = argv[13];
+				if (wcscmp(fontUnderline, L"false") == 0) {
+					invokeFontUnderline = false;
+				}
+				else {
+					invokeFontUnderline = true;
+				}
+
+				// Send Invokation Signal
+				invokeInternalFontCreator = 1;
+			}
 		}
 
 		// Restore Font Command (4 Args); Example:
 		// L"restore font channel 0"
 		else if (wcscmp(argv[0], L"restore") == 0 && wcscmp(argv[1], L"font") == 0) {
 			if (argc != 4) {
-				DebuggerLog("Invalid Args for 'restore font' command: Not equal to 4.\n");
+				errorString = "Invalid Args for 'restore font' command: Not equal to 4.";
 			}
+			else {
+				// L"channel 0"
+				invokeFontChannel = str2intW(argv[3]);
 
-			// L"channel 0"
-			invokeFontChannel = str2intW(argv[3]);
+				// Send Invokation Signal
+				invokeInternalFontDeletor = 1;
+			}
+		}
 
-			// Send Invokation Signal
-			invokeInternalFontDeletor = 1;
+		// Command Not Found Senario
+		else {
+			errorString = "Command Not Found!";
 		}
 
 		//
 		// Process Text Command: END
 		//
+
+		// Send Feedback
+		if (errorString != nullptr) {
+			Internal_SendString(errorString);
+		}
+		else {
+			Internal_SendString("OK");
+		}
 
 		// Release Allocated Memory
 		ArgParserW_Freer(&argc, &argv);
