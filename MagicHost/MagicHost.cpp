@@ -59,20 +59,19 @@ void Render(HWND hwnd) {
 	HBITMAP hBitmap = CreateDIBSection(memDC, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 	SelectObject(memDC, hBitmap);
 
-	// 将图像数据写入内存DC
+	// 将图像数据写入内存DC (image参数，就是在Setup和Update里修改的帧缓冲)
 	SetDIBits(memDC, hBitmap, 0, IMAGE_HEIGHT, image, &bmi, DIB_RGB_COLORS);
 
-	// 将内存DC的内容绘制到窗口DC上
-	BitBlt(hdc, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, memDC, 0, 0, SRCCOPY);
+	// -----
 
 	// 设置文本颜色为红色
-	SetTextColor(hdc, RGB(255, 0, 0));
+	SetTextColor(memDC, RGB(255, 0, 0));
 
 	// 设置背景颜色为蓝色
-	SetBkColor(hdc, RGB(0, 0, 255));
-	SetBkMode(hdc, TRANSPARENT);
-	SetBkMode(hdc, OPAQUE);
-	SetBkColor(hdc, RGB(0, 0, 255));
+	SetBkColor(memDC, RGB(0, 0, 255));
+	SetBkMode(memDC, TRANSPARENT);
+	SetBkMode(memDC, OPAQUE);
+	SetBkColor(memDC, RGB(0, 0, 255));
 
 	HFONT hFont = CreateFont(
 		-60,                // 字体高度（负值表示以像素为单位）
@@ -91,12 +90,17 @@ void Render(HWND hwnd) {
 		L"黑体"            // 字体名称
 	);
 
-	SelectObject(hdc, hFont);
+	SelectObject(memDC, hFont);
 
 	// 绘制文本
-	DrawTextW(hdc, L"This is a 有中文的 string.\nAnother Line.", -1, &pos, DT_CENTER);
+	DrawTextW(memDC, L"This is a 有中文的 string.\nAnother Line.", -1, &pos, DT_CENTER);
 
 	DeleteObject(hFont);
+
+	// -----
+
+	// 将内存DC的内容绘制到窗口DC上
+	BitBlt(hdc, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, memDC, 0, 0, SRCCOPY);
 
 	// 释放资源
 	DeleteObject(hBitmap);
