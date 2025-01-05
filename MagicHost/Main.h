@@ -15,7 +15,7 @@ void Setup(HWND& hwnd, bool* wannaUpdate);
 void Update(HWND& hwnd, bool* wannaExit);
 void Exit();
 
-// For Text Interface, Sharing Variable to MagicHost.cpp
+// For Text Interface, Sharing Variable with MagicHost.cpp
 extern bool textEnabled[];
 extern wchar_t* textPointers[];
 
@@ -33,5 +33,18 @@ extern int textY[];
 extern int textWidth[];
 extern int textHeight[];
 extern TextLayout textLayout[];
+
+// For Font Interface, Sharing Variable with MagicHost.cpp
+extern bool fontEnabled[];
+extern HFONT defaultFontPtr;
+extern HFONT fontPtrs[];
+
+extern unsigned char invokeInternalFontCreator;
+extern int invokeFontChannel;
+extern int invokeFontSize;
+extern bool invokeFontItalic;
+extern bool invokeFontBold;
+extern bool invokeFontUnderline;
+extern wchar_t* invokeFontFamily;
 
 #endif

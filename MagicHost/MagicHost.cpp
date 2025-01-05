@@ -63,10 +63,54 @@ void Render(HWND hwnd) {
 
 	// -----
 
+	// 处理新增字体创建
+	if (invokeInternalFontCreator == 1) {
+
+		// 如果之前，这个字体指针已经创建过字体
+		if (fontEnabled[invokeFontChannel] == true) {
+			SelectObject(memDC, defaultFontPtr);        // 恢复默认字体
+			DeleteObject(fontPtrs[invokeFontChannel]);  // 删除字体对象
+			fontEnabled[invokeFontChannel] = false;     // 指针标识恢复空状态
+		}
+
+		// 创建新字体
+		fontPtrs[invokeFontChannel] = CreateFont(
+			-invokeFontSize,                       // 字体高度（负值表示以像素为单位）
+			0,                                     // 字体宽度（0 表示自动计算）
+			invokeFontItalic ? 12 : 0,             // 字体的倾斜角度
+			0,                                     // 字体的基线角度
+			invokeFontBold ? FW_BOLD : FW_NORMAL,  // 字体粗细
+			invokeFontItalic ? TRUE : FALSE,       // 是否斜体
+			invokeFontUnderline ? TRUE : FALSE,    // 是否有下划线
+			FALSE,                                 // 是否有删除线
+			DEFAULT_CHARSET,                       // 字符集
+			OUT_DEFAULT_PRECIS,                    // 输出精度
+			CLIP_DEFAULT_PRECIS,                   // 裁剪精度
+			DEFAULT_QUALITY,                       // 输出质量
+			DEFAULT_PITCH | FF_SWISS,              // 字体间距和族类
+			invokeFontFamily                       // 字体名称
+		);
+		fontEnabled[invokeFontChannel] = true;     // 指针标识设置满状态
+
+		// 启用字体，为了得到并保存默认字体
+		defaultFontPtr = (HFONT)SelectObject(memDC, fontPtrs[invokeFontChannel]);
+
+		// 处理完毕，禁用invoke信号
+		invokeInternalFontCreator = 0;
+	}
+
 	// 依次绘制Magic文字接口传输过来的文字
 
 	for (int i = 0; i < MAX_TEXT_CHANNELS; i++) {
 		if (textEnabled[i]) {
+
+			// 决定文本字体
+			if (fontEnabled[i] == true) {
+				SelectObject(memDC, fontPtrs[i]);
+			}
+			else {
+				SelectObject(memDC, defaultFontPtr);
+			}
 
 			// 决定文本颜色
 			SetTextColor(

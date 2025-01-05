@@ -74,6 +74,19 @@ int textWidth[MAX_TEXT_CHANNELS] = { 0 };
 int textHeight[MAX_TEXT_CHANNELS] = { 0 };
 TextLayout textLayout[MAX_TEXT_CHANNELS] = { WORDBREAK };
 
+// For Font Interface
+bool fontEnabled[MAX_TEXT_CHANNELS] = { false };
+HFONT defaultFontPtr = NULL;
+HFONT fontPtrs[MAX_TEXT_CHANNELS] = { NULL };
+
+unsigned char invokeInternalFontCreator = 0;
+int invokeFontChannel = 0;
+int invokeFontSize = 0;
+bool invokeFontItalic = false;
+bool invokeFontBold = false;
+bool invokeFontUnderline = false;
+wchar_t* invokeFontFamily = nullptr;
+
 
 /**
  * @section
