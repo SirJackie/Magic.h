@@ -209,6 +209,104 @@ void LandingAnimation(bool r, bool g, bool b) {
 	}
 }
 
+
+/**
+ * @section
+ * String Transfer
+ */
+
+#define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+void Internal_SendString(const char* str) {
+
+	// Save the length of the string to pipe.
+	int length = strlen(str) + 1;
+	stringLen = length;
+
+	// Invoke String Transfer
+	invokeReceived = 0;
+	invokeTransfer = 1;
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
+
+	// Sending the long string batch by batch.
+	int howManyBatch = length / 16 + (length % 16 == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Send a single batch of string.
+		const char* ptr = str + batch * 16;  // Source: Starting Position
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		for (int i = 0; i < 16; i++) {
+			stringBuf[i] = ptr[i];
+			if (ptr[i] == '\0') {
+				break;
+			}
+		}
+
+		// Invoke "Send Batch" Signal
+		invokeReceived = 0;
+		invokeSendBtch = 1;
+		while (invokeReceived == 0);  // Wait for Response
+		invokeReceived = 0;
+	}
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+void Internal_SendStringW(const wchar_t* wideStr) {
+
+	// Save the length of the string to pipe.
+	int length = wcslen(wideStr) + 1;
+	stringLen = length;
+
+	// Invoke String Transfer
+	invokeReceived = 0;
+	invokeTransfer = 1;
+	while (invokeReceived == 0);  // Wait for Response
+	invokeReceived = 0;
+
+	// Sending the long string batch by batch.
+	int howManyBatch = length / WIDE_PIPE_SIZE + (length % WIDE_PIPE_SIZE == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Send a single batch of string.
+		const wchar_t* ptr = wideStr + batch * WIDE_PIPE_SIZE;  // Source: Starting Position
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		for (int i = 0; i < WIDE_PIPE_SIZE; i++) {
+			((wchar_t*)stringBuf)[i] = ptr[i];
+			if (ptr[i] == L'\0') {
+				break;
+			}
+		}
+
+		// Invoke "Send Batch" Signal
+		invokeReceived = 0;
+		invokeSendBtch = 1;
+		while (invokeReceived == 0);  // Wait for Response
+		invokeReceived = 0;
+	}
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
 // DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
@@ -263,8 +361,6 @@ char* Internal_ReceiveString() {
 #pragma optimize( "", off )
 #endif
 
-#define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
-
 wchar_t* Internal_ReceiveStringW() {
 
 	// Wait for Invoke Signal
@@ -308,6 +404,12 @@ wchar_t* Internal_ReceiveStringW() {
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
+
+
+/**
+ * @section
+ * Arg Parser
+ */
 
 int strFindSpaceOrZero(const char* str) {
 	int i = 0;
@@ -508,6 +610,12 @@ void ArgParserW_Freer(int* argcPtr, wchar_t*** argvPtr) {
 	delete[] (*argvPtr);
 	(*argvPtr) = nullptr;
 }
+
+
+/**
+ * @section
+ * Magic Interfaces
+ */
 
 // DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)

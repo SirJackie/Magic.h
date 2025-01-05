@@ -236,7 +236,15 @@ void LoadBMP(const char* filename, int* width, int* height, int* pitch, unsigned
 	*pitch = info_header.image_size / info_header.height;
 }
 
-// DISABLE MSVC OPTIMIZATION: START
+
+/**
+ * @section
+ * String Transfer
+ */
+
+#define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
+
+ // DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
@@ -286,8 +294,6 @@ void Internal_SendString(const char* str) {
 #pragma optimize( "", off )
 #endif
 
-#define WIDE_PIPE_SIZE (16 / sizeof(wchar_t))
-
 void Internal_SendStringW(const wchar_t* wideStr) {
 
 	// Save the length of the string to pipe.
@@ -321,6 +327,104 @@ void Internal_SendStringW(const wchar_t* wideStr) {
 		while (invokeReceived == 0);  // Wait for Response
 		invokeReceived = 0;
 	}
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+char* Internal_ReceiveString() {
+
+	// Wait for Invoke Signal
+	while (invokeTransfer == 0);
+
+	// Receive the length of the string
+	int length = stringLen;
+
+	// Process Invoke Signal
+	invokeTransfer = 0;
+	invokeReceived = 1;
+
+	// Allocate Memory
+	char* dest = new char[length + 1];
+
+	// Receiving the long string batch by batch.
+	int howManyBatch = length / 16 + (length % 16 == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Wait for Invoke Signal
+		while (invokeSendBtch == 0);
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		char* ptr = dest + batch * 16;  // Destination: Starting Position
+		for (int i = 0; i < 16; i++) {
+			ptr[i] = stringBuf[i];
+			if (stringBuf[i] == '\0') {
+				break;
+			}
+		}
+
+		// Process Invoke Signal
+		invokeSendBtch = 0;
+		invokeReceived = 1;
+	}
+
+	return dest;
+}
+
+// DISABLE MSVC OPTIMIZATION: END
+#if defined(_MSC_VER)
+#pragma optimize( "", on )
+#endif
+
+// DISABLE MSVC OPTIMIZATION: START
+#if defined(_MSC_VER)
+#pragma optimize( "", off )
+#endif
+
+wchar_t* Internal_ReceiveStringW() {
+
+	// Wait for Invoke Signal
+	while (invokeTransfer == 0);
+
+	// Receive the length of the string
+	int length = stringLen;
+
+	// Process Invoke Signal
+	invokeTransfer = 0;
+	invokeReceived = 1;
+
+	// Allocate Memory
+	wchar_t* dest = new wchar_t[length + 1];
+
+	// Receiving the long string batch by batch.
+	int howManyBatch = length / WIDE_PIPE_SIZE + (length % WIDE_PIPE_SIZE == 0 ? 0 : 1);
+	for (int batch = 0; batch < howManyBatch; batch++) {
+
+		// Wait for Invoke Signal
+		while (invokeSendBtch == 0);
+
+		// Manual String Copy, Because '\0' ONLY APPEARED IN THE LAST BATCH.
+		wchar_t* ptr = dest + batch * WIDE_PIPE_SIZE;  // Destination: Starting Position
+		for (int i = 0; i < WIDE_PIPE_SIZE; i++) {
+			ptr[i] = ((wchar_t*)stringBuf)[i];
+			if (((wchar_t*)stringBuf)[i] == L'\0') {
+				break;
+			}
+		}
+
+		// Process Invoke Signal
+		invokeSendBtch = 0;
+		invokeReceived = 1;
+	}
+
+	return dest;
 }
 
 // DISABLE MSVC OPTIMIZATION: END
