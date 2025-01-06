@@ -1052,11 +1052,18 @@ void MagicText_Receiver() {
 		// Delete Text Command (4 Args); Example:
 		// L"delete text channel 0"
 		else if (wcscmp(argv[0], L"delete") == 0 && wcscmp(argv[1], L"text") == 0) {
-			if (argc != 4) {
-				errorString = "Invalid Args for 'delete text' command: Not equal to 4.";
+			
+			// Fetch L"delete text"
+			argFinder.SetFetchedFlag(0, 2);
+
+			// Fetch L"channel 0"
+			int channel;
+			if (argFinder.FetchArg(L"channel", 2, &tmpArgv)) {
+				channel = str2intW(argv[3]);
+				textEnabled[channel] = false;
 			}
 			else {
-				int channel = str2intW(argv[3]);
+				channel = 0;
 				textEnabled[channel] = false;
 			}
 		}
@@ -1064,70 +1071,113 @@ void MagicText_Receiver() {
 		// Set Font Command (14 Args); Example:
 		// L"set font channel 0 fontSize 20 fontFamily "黑体" fontItalic false fontBold false fontUnderline false"
 		else if (wcscmp(argv[0], L"set") == 0 && wcscmp(argv[1], L"font") == 0) {
-			if (argc != 14) {
-				errorString = "Invalid Args for 'set font' command: Not equal to 14.";
+
+			// Fetch L"set font"
+			argFinder.SetFetchedFlag(0, 2);
+
+			// Fetch L"channel 0"
+			if (argFinder.FetchArg(L"channel", 2, &tmpArgv)) {
+				invokeFontChannel = str2intW(tmpArgv[1]);
 			}
 			else {
-				// L"channel 0"
-				invokeFontChannel = str2intW(argv[3]);
+				invokeFontChannel = 0;
+			}
 
-				// L"fontSize 20"
-				invokeFontSize = str2intW(argv[5]);
+			// Fetch L"fontSize 20"
+			if (argFinder.FetchArg(L"fontSize", 2, &tmpArgv)) {
+				invokeFontSize = str2intW(tmpArgv[1]);
+			}
+			else {
+				invokeFontSize = 20;
+			}
 
-				// L"fontFamily "黑体""
+			// Fetch L"fontFamily \"黑体\""
+			const wchar_t* fontFamily;
+			if (argFinder.FetchArg(L"fontFamily", 2, &tmpArgv)) {
 				if (invokeFontFamily != nullptr) {
 					delete[] invokeFontFamily;
 					invokeFontFamily = nullptr;
 				}
-				wchar_t* fontFamily = argv[7];
+				fontFamily = tmpArgv[1];
 				invokeFontFamily = new wchar_t[wcslen(fontFamily) + 1];
 				wcscpy(invokeFontFamily, fontFamily);
+			}
+			else {
+				if (invokeFontFamily != nullptr) {
+					delete[] invokeFontFamily;
+					invokeFontFamily = nullptr;
+				}
+				fontFamily = L"黑体";
+				invokeFontFamily = new wchar_t[wcslen(fontFamily) + 1];
+				wcscpy(invokeFontFamily, fontFamily);
+			}
 
-				// L"fontItalic false"
-				wchar_t* fontItalic = argv[9];
+			// Fetch L"fontItalic false"
+			const wchar_t* fontItalic;
+			if (argFinder.FetchArg(L"fontItalic", 2, &tmpArgv)) {
+				fontItalic = tmpArgv[1];
 				if (wcscmp(fontItalic, L"false") == 0) {
 					invokeFontItalic = false;
 				}
 				else {
 					invokeFontItalic = true;
 				}
+			}
+			else {
+				invokeFontItalic = false;
+			}
 
-				// L"fontBold false"
-				wchar_t* fontBold = argv[11];
+			// Fetch L"fontBold false"
+			const wchar_t* fontBold;
+			if (argFinder.FetchArg(L"fontBold", 2, &tmpArgv)) {
+				fontBold = tmpArgv[1];
 				if (wcscmp(fontBold, L"false") == 0) {
 					invokeFontBold = false;
 				}
 				else {
 					invokeFontBold = true;
 				}
+			}
+			else {
+				invokeFontBold = false;
+			}
 
-				// L"fontUnderline false"
-				wchar_t* fontUnderline = argv[13];
+			// Fetch L"fontUnderline false"
+			const wchar_t* fontUnderline;
+			if (argFinder.FetchArg(L"fontUnderline", 2, &tmpArgv)) {
+				fontUnderline = tmpArgv[1];
 				if (wcscmp(fontUnderline, L"false") == 0) {
 					invokeFontUnderline = false;
 				}
 				else {
 					invokeFontUnderline = true;
 				}
-
-				// Send Invokation Signal
-				invokeInternalFontCreator = 1;
 			}
+			else {
+				invokeFontUnderline = false;
+			}
+
+			// Send Invokation Signal
+			invokeInternalFontCreator = 1;
 		}
 
 		// Restore Font Command (4 Args); Example:
 		// L"restore font channel 0"
 		else if (wcscmp(argv[0], L"restore") == 0 && wcscmp(argv[1], L"font") == 0) {
-			if (argc != 4) {
-				errorString = "Invalid Args for 'restore font' command: Not equal to 4.";
+			
+			// Fetch L"restore font"
+			argFinder.SetFetchedFlag(0, 2);
+
+			// Fetch L"channel 0"
+			if (argFinder.FetchArg(L"channel", 2, &tmpArgv)) {
+				invokeFontChannel = str2intW(tmpArgv[1]);
 			}
 			else {
-				// L"channel 0"
-				invokeFontChannel = str2intW(argv[3]);
-
-				// Send Invokation Signal
-				invokeInternalFontDeletor = 1;
+				invokeFontChannel = 0;
 			}
+
+			// Send Invokation Signal
+			invokeInternalFontDeletor = 1;
 		}
 
 		// Command Not Found Senario
