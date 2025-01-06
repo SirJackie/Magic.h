@@ -1162,7 +1162,7 @@ void MagicText_Receiver() {
 			// Fetch L"channel 0"
 			int channel;
 			if (argFinder.FetchArg(L"channel", 2, &tmpArgv)) {
-				channel = str2intW(argv[3]);
+				channel = str2intW(tmpArgv[1]);
 				textEnabled[channel] = false;
 			}
 			else {
