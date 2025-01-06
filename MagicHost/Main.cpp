@@ -726,6 +726,10 @@ void MagicMusic_Receiver() {
 		char** argv = nullptr;
 		ArgParser(command, &argc, &argv);
 
+		// Arg Finder.
+		ArgFinder argFinder = ArgFinder(argc, argv);
+		char** tmpArgv = nullptr;
+
 		//
 		// Process Music Command: START
 		//
@@ -736,144 +740,201 @@ void MagicMusic_Receiver() {
 		// Open Command; Example:
 		// "open .\\Music\\bg.wav on_channel 0"
 		if (strcmp(argv[0], "open") == 0) {
-			if (argc != 4) {
-				errorString = "Invalid Args for 'open' command: Not equal to 4.";
+
+			// Fetch "open .\\Music\\bg.wav"
+			const char* filename;
+			if (argFinder.FetchArg("open", 2, &tmpArgv)) {
+				filename = tmpArgv[1];
 			}
 			else {
-				const char* filename = argv[1];
-				int channel = str2int(argv[3]);
+				filename = "";
+				// We won't accept empty filename.
+				errorString = "Error in 'open' command: Filename Not Specified.";
+			}
 
-				if (channel == 0) {
-					sdlMusicPtr = Mix_LoadMUS(filename);
-				}
-				else {
-					sdlChunkPtrs[channel] = Mix_LoadWAV(filename);
-				}
+			// Fetch "on_channel 0"
+			int channel;
+			if (argFinder.FetchArg("on_channel", 2, &tmpArgv)) {
+				channel = str2int(tmpArgv[1]);
+			}
+			else {
+				channel = 0;
+			}
+
+			// Process Command
+			if (channel == 0) {
+				sdlMusicPtr = Mix_LoadMUS(filename);
+			}
+			else {
+				sdlChunkPtrs[channel] = Mix_LoadWAV(filename);
 			}
 		}
 		
 		// Play Command; Example:
 		// "play channel 0 times -1"
 		else if (strcmp(argv[0], "play") == 0) {
-			if (argc != 5) {
-				errorString = "Invalid Args for 'play' command: Not equal to 5.";
+
+			// Fetch "play"
+			argFinder.SetFetchedFlag(0, 1);
+
+			// Fetch "channel 0"
+			int channel;
+			if (argFinder.FetchArg("channel", 2, &tmpArgv)) {
+				channel = str2int(tmpArgv[1]);
 			}
 			else {
-				int channel = str2int(argv[2]);
-				int times = str2int(argv[4]);
+				channel = 0;
+			}
 
-				if (isChannelPlaying[channel] == false) {
-					// If not playing, start playing.
-					isChannelPlaying[channel] = true;
-					if (channel == 0) {
-						Mix_PlayMusic(sdlMusicPtr, times);
-					}
-					else {
-						Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
-					}
+			// Fetch "times -1"
+			int times;
+			if (argFinder.FetchArg("times", 2, &tmpArgv)) {
+				times = str2int(tmpArgv[1]);
+			}
+			else {
+				times = 0;
+			}
+
+			// Process Command
+			if (isChannelPlaying[channel] == false) {
+				// If not playing, start playing.
+				isChannelPlaying[channel] = true;
+				if (channel == 0) {
+					Mix_PlayMusic(sdlMusicPtr, times);
 				}
 				else {
-					// If playing, DON'T PLAY REPEATEDLY.
-					;
+					Mix_PlayChannel(channel, sdlChunkPtrs[channel], times);
 				}
+			}
+			else {
+				// If playing, DON'T PLAY REPEATEDLY.
+				;
 			}
 		}
 		
 		// Stop Command; Example:
 		// "stop channel 0"
 		else if (strcmp(argv[0], "stop") == 0) {
-			if (argc != 3) {
-				errorString = "Invalid Args for 'stop' command: Not equal to 3.";
+
+			// Fetch "stop"
+			argFinder.SetFetchedFlag(0, 1);
+
+			// Fetch "channel 0"
+			int channel;
+			if (argFinder.FetchArg("channel", 2, &tmpArgv)) {
+				channel = str2int(tmpArgv[1]);
 			}
 			else {
-				int channel = str2int(argv[2]);
+				channel = 0;
+			}
 
-				if (isChannelPlaying[channel] == true) {
-					// If playing, stop the music.
-					isChannelPlaying[channel] = false;
-					if (channel == 0) {
-						Mix_HaltMusic();
-					}
-					else {
-						Mix_HaltChannel(channel);
-					}
+			// Process Command
+			if (isChannelPlaying[channel] == true) {
+				// If playing, stop the music.
+				isChannelPlaying[channel] = false;
+				if (channel == 0) {
+					Mix_HaltMusic();
 				}
 				else {
-					// If not playing, DON'T stop in vain.
-					;
+					Mix_HaltChannel(channel);
 				}
+			}
+			else {
+				// If not playing, DON'T stop in vain.
+				;
 			}
 		}
 
 		// Pause Command; Example:
 		// "pause channel 0"
 		else if (strcmp(argv[0], "pause") == 0) {
-			if (argc != 3) {
-				errorString = "Invalid Args for 'pause' command: Not equal to 3.";
+
+			// Fetch "pause"
+			argFinder.SetFetchedFlag(0, 1);
+
+			// Fetch "channel 0"
+			int channel;
+			if (argFinder.FetchArg("channel", 2, &tmpArgv)) {
+				channel = str2int(tmpArgv[1]);
 			}
 			else {
-				int channel = str2int(argv[2]);
+				channel = 0;
+			}
 
-				if (isChannelPlaying[channel] == true) {
-					// If playing, pause the music.
-					isChannelPlaying[channel] = false;
-					if (channel == 0) {
-						Mix_PauseMusic();
-					}
-					else {
-						Mix_Pause(channel);
-					}
+			// Process Command
+			if (isChannelPlaying[channel] == true) {
+				// If playing, pause the music.
+				isChannelPlaying[channel] = false;
+				if (channel == 0) {
+					Mix_PauseMusic();
 				}
 				else {
-					// If not playing, DON'T pause in vain.
-					;
+					Mix_Pause(channel);
 				}
+			}
+			else {
+				// If not playing, DON'T pause in vain.
+				;
 			}
 		}
 
 		// Resume Command; Example:
 		// "resume channel 0"
 		else if (strcmp(argv[0], "resume") == 0) {
-			if (argc != 3) {
-				errorString = "Invalid Args for 'resume' command: Not equal to 3.";
+
+			// Fetch "resume"
+			argFinder.SetFetchedFlag(0, 1);
+
+			// Fetch "channel 0"
+			int channel;
+			if (argFinder.FetchArg("channel", 2, &tmpArgv)) {
+				channel = str2int(tmpArgv[1]);
 			}
 			else {
-				int channel = str2int(argv[2]);
+				channel = 0;
+			}
 
-				if (isChannelPlaying[channel] == false) {
-					// If not playing, resume playing.
-					isChannelPlaying[channel] = true;
-					if (channel == 0) {
-						Mix_ResumeMusic();
-					}
-					else {
-						Mix_Resume(channel);
-					}
+			// Process Command
+			if (isChannelPlaying[channel] == false) {
+				// If not playing, resume playing.
+				isChannelPlaying[channel] = true;
+				if (channel == 0) {
+					Mix_ResumeMusic();
 				}
 				else {
-					// If playing, DON'T RESUME REPEATEDLY.
-					;
+					Mix_Resume(channel);
 				}
+			}
+			else {
+				// If playing, DON'T RESUME REPEATEDLY.
+				;
 			}
 		}
 		
 		// Close Command; Example:
 		// "close channel 0"
 		else if (strcmp(argv[0], "close") == 0) {
-			if (argc != 3) {
-				errorString = "Invalid Args for 'close' command: Not equal to 3.";
+
+			// Fetch "close"
+			argFinder.SetFetchedFlag(0, 1);
+
+			// Fetch "channel 0"
+			int channel;
+			if (argFinder.FetchArg("channel", 2, &tmpArgv)) {
+				channel = str2int(tmpArgv[1]);
 			}
 			else {
-				int channel = str2int(argv[2]);
+				channel = 0;
+			}
 
-				if (channel == 0) {
-					Mix_FreeMusic(sdlMusicPtr);
-					sdlMusicPtr = nullptr;
-				}
-				else {
-					Mix_FreeChunk(sdlChunkPtrs[channel]);
-					sdlChunkPtrs[channel] = nullptr;
-				}
+			// Process Command
+			if (channel == 0) {
+				Mix_FreeMusic(sdlMusicPtr);
+				sdlMusicPtr = nullptr;
+			}
+			else {
+				Mix_FreeChunk(sdlChunkPtrs[channel]);
+				sdlChunkPtrs[channel] = nullptr;
 			}
 		}
 
