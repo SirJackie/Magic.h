@@ -611,6 +611,94 @@ void ArgParserW_Freer(int* argcPtr, wchar_t*** argvPtr) {
 	(*argvPtr) = nullptr;
 }
 
+#ifndef OUT
+#define OUT
+#endif
+
+class ArgFinder {
+private:
+	int argc;
+	char** argv;
+	bool* argFetched;
+
+public:
+	ArgFinder(int argc_, char** argv_) {
+		this->argc = argc_;
+		this->argv = argv_;
+		this->argFetched = new bool[this->argc];
+		for (int i = 0; i < this->argc; i++) {
+			this->argFetched[i] = false;
+		}
+	}
+
+	// return bool: true means found, false means cannot found.
+	bool FetchArg(const char* targetStr, int fetchHowMany, char*** OUT resultArgv) {
+		for (int i = 0; i < this->argc; i++) {
+			if (strcmp(targetStr, this->argv[i]) == 0 && this->argFetched[i] == false) {
+				*resultArgv = this->argv + i;
+				for (int j = i; j < i + fetchHowMany; j++) {
+					this->argFetched[j] = true;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void SetFetchedFlag(int startIndex, int fetchHowMany) {
+		for (int i = startIndex; i < startIndex + fetchHowMany; i++) {
+			this->argFetched[i] = true;
+		}
+	}
+
+	~ArgFinder() {
+		delete[] this->argFetched;
+		this->argFetched = nullptr;
+	}
+};
+
+class ArgFinderW {
+private:
+	int argc;
+	wchar_t** argv;
+	bool* argFetched;
+
+public:
+	ArgFinderW(int argc_, wchar_t** argv_) {
+		this->argc = argc_;
+		this->argv = argv_;
+		this->argFetched = new bool[this->argc];
+		for (int i = 0; i < this->argc; i++) {
+			this->argFetched[i] = false;
+		}
+	}
+
+	// return bool: true means found, false means cannot found.
+	bool FetchArg(const wchar_t* targetStr, int fetchHowMany, wchar_t*** OUT resultArgv) {
+		for (int i = 0; i < this->argc; i++) {
+			if (wcscmp(targetStr, this->argv[i]) == 0 && this->argFetched[i] == false) {
+				*resultArgv = this->argv + i;
+				for (int j = i; j < i + fetchHowMany; j++) {
+					this->argFetched[j] = true;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void SetFetchedFlag(int startIndex, int fetchHowMany) {
+		for (int i = startIndex; i < startIndex + fetchHowMany; i++) {
+			this->argFetched[i] = true;
+		}
+	}
+
+	~ArgFinderW() {
+		delete[] this->argFetched;
+		this->argFetched = nullptr;
+	}
+};
+
 
 /**
  * @section
@@ -816,52 +904,6 @@ void MagicMusic_Receiver() {
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
-
-#ifndef OUT
-#define OUT
-#endif
-
-class ArgFinderW {
-private:
-	int argc;
-	wchar_t** argv;
-	bool* argFetched;
-
-public:
-	ArgFinderW(int argc_, wchar_t** argv_) {
-		this->argc = argc_;
-		this->argv = argv_;
-		this->argFetched = new bool[this->argc];
-		for (int i = 0; i < this->argc; i++) {
-			this->argFetched[i] = false;
-		}
-	}
-
-	// return bool: true means found, false means cannot found.
-	bool FetchArg(const wchar_t* targetStr, int fetchHowMany, wchar_t*** OUT resultArgv) {
-		for (int i = 0; i < this->argc; i++) {
-			if (wcscmp(targetStr, this->argv[i]) == 0 && this->argFetched[i] == false) {
-				*resultArgv = this->argv + i;
-				for (int j = i; j < i + fetchHowMany; j++) {
-					this->argFetched[j] = true;
-				}
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void SetFetchedFlag(int startIndex, int fetchHowMany) {
-		for (int i = startIndex; i < startIndex + fetchHowMany; i++) {
-			this->argFetched[i] = true;
-		}
-	}
-
-	~ArgFinderW() {
-		delete[] this->argFetched;
-		this->argFetched = nullptr;
-	}
-};
 
 // DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
