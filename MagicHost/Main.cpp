@@ -837,16 +837,18 @@ public:
 		}
 	}
 
-	void FetchArg(const wchar_t* targetStr, int fetchHowMany, wchar_t*** OUT resultArgv) {
+	// return bool: true means found, false means cannot found.
+	bool FetchArg(const wchar_t* targetStr, int fetchHowMany, wchar_t*** OUT resultArgv) {
 		for (int i = 0; i < this->argc; i++) {
 			if (wcscmp(targetStr, this->argv[i]) == 0 && this->argFetched[i] == false) {
 				*resultArgv = this->argv + i;
 				for (int j = i; j < i + fetchHowMany; j++) {
 					this->argFetched[j] = true;
 				}
-				return;
+				return true;
 			}
 		}
+		return false;
 	}
 
 	void SetFetchedFlag(int startIndex, int fetchHowMany) {
@@ -901,13 +903,27 @@ void MagicText_Receiver() {
 			argFinder.SetFetchedFlag(0, 2);
 
 			// Fetch L"channel 0"
-			argFinder.FetchArg(L"channel", 2, &tmpArgv);
-			int channel = str2intW(tmpArgv[1]);
-			textEnabled[channel] = true;
+			int channel;
+			if (argFinder.FetchArg(L"channel", 2, &tmpArgv)) {
+				channel = str2intW(tmpArgv[1]);
+				textEnabled[channel] = true;
+			}
+			else {
+				channel = 0;
+				textEnabled[channel] = true;
+			}
 
 			// Fetch L"content "STRING""
-			argFinder.FetchArg(L"content", 2, &tmpArgv);
-			wchar_t* content = tmpArgv[1];
+			const wchar_t* content;
+			if (argFinder.FetchArg(L"content", 2, &tmpArgv)) {
+				content = tmpArgv[1];
+			}
+			else {
+				content = L"";
+				// We won't accept empty content string.
+				errorString = "Error in 'draw text' command: Content Not Specified.";
+			}
+			// -----
 			if (textPointers[channel] != nullptr) {
 				delete[] textPointers[channel];
 				textPointers[channel] = nullptr;
@@ -916,28 +932,58 @@ void MagicText_Receiver() {
 			wcscpy(textPointers[channel], content);
 
 			// Fetch L"x 100"
-			argFinder.FetchArg(L"x", 2, &tmpArgv);
-			int x = str2intW(tmpArgv[1]);
-			textX[channel] = x;
+			int x;
+			if (argFinder.FetchArg(L"x", 2, &tmpArgv)) {
+				x = str2intW(tmpArgv[1]);
+				textX[channel] = x;
+			}
+			else {
+				x = 0;
+				textX[channel] = x;
+			}
 
 			// Fetch L"y 100"
-			argFinder.FetchArg(L"y", 2, &tmpArgv);
-			int y = str2intW(tmpArgv[1]);
-			textY[channel] = y;
+			int y;
+			if (argFinder.FetchArg(L"y", 2, &tmpArgv)) {
+				y = str2intW(tmpArgv[1]);
+				textY[channel] = y;
+			}
+			else {
+				y = 0;
+				textY[channel] = y;
+			}
 
 			// Fetch L"width 300"
-			argFinder.FetchArg(L"width", 2, &tmpArgv);
-			int width = str2intW(tmpArgv[1]);
-			textWidth[channel] = width;
+			int width;
+			if (argFinder.FetchArg(L"width", 2, &tmpArgv)) {
+				width = str2intW(tmpArgv[1]);
+				textWidth[channel] = width;
+			}
+			else {
+				width = G_SCREEN_WIDTH;
+				textWidth[channel] = width;
+			}
 
 			// Fetch L"height 300"
-			argFinder.FetchArg(L"height", 2, &tmpArgv);
-			int height = str2intW(tmpArgv[1]);
-			textHeight[channel] = height;
+			int height;
+			if (argFinder.FetchArg(L"height", 2, &tmpArgv)) {
+				height = str2intW(tmpArgv[1]);
+				textHeight[channel] = height;
+			}
+			else {
+				height = G_SCREEN_HEIGHT;
+				textHeight[channel] = height;
+			}
 
 			// Fetch L"layout wordbreak"
-			argFinder.FetchArg(L"layout", 2, &tmpArgv);
-			wchar_t* layout = tmpArgv[1];
+			const wchar_t* layout;
+			if (argFinder.FetchArg(L"layout", 2, &tmpArgv)) {
+				layout = tmpArgv[1];
+			}
+			else {
+				layout = L"clip";
+			}
+			// -----
 			if (wcscmp(layout, L"clip") == 0) {
 				textLayout[channel] = CLIP;
 			}
@@ -955,28 +1001,46 @@ void MagicText_Receiver() {
 			}
 
 			// Fetch L"textColor 255 0 0"
-			argFinder.FetchArg(L"textColor", 4, &tmpArgv);
-			int textR = str2intW(tmpArgv[1]);
-			int textG = str2intW(tmpArgv[2]);
-			int textB = str2intW(tmpArgv[3]);
+			if (argFinder.FetchArg(L"textColor", 4, &tmpArgv)) {
+				int textR = str2intW(tmpArgv[1]);
+				int textG = str2intW(tmpArgv[2]);
+				int textB = str2intW(tmpArgv[3]);
 
-			textColorR[channel] = textR;
-			textColorG[channel] = textG;
-			textColorB[channel] = textB;
+				textColorR[channel] = textR;
+				textColorG[channel] = textG;
+				textColorB[channel] = textB;
+			}
+			else {
+				textColorR[channel] = 255;
+				textColorG[channel] = 255;
+				textColorB[channel] = 255;
+			}
 
 			// Fetch L"bgColor 0 0 255"
-			argFinder.FetchArg(L"bgColor", 4, &tmpArgv);
-			int bgR = str2intW(tmpArgv[1]);
-			int bgG = str2intW(tmpArgv[2]);
-			int bgB = str2intW(tmpArgv[3]);
+			if (argFinder.FetchArg(L"bgColor", 4, &tmpArgv)) {
+				int bgR = str2intW(tmpArgv[1]);
+				int bgG = str2intW(tmpArgv[2]);
+				int bgB = str2intW(tmpArgv[3]);
 
-			bgColorR[channel] = bgR;
-			bgColorG[channel] = bgG;
-			bgColorB[channel] = bgB;
+				bgColorR[channel] = bgR;
+				bgColorG[channel] = bgG;
+				bgColorB[channel] = bgB;
+			}
+			else {
+				bgColorR[channel] = 0;
+				bgColorG[channel] = 0;
+				bgColorB[channel] = 0;
+			}
 
 			// L"bgTransparent false"
-			argFinder.FetchArg(L"bgTransparent", 2, &tmpArgv);
-			wchar_t* bgTransparentWideStr = tmpArgv[1];
+			const wchar_t* bgTransparentWideStr;
+			if (argFinder.FetchArg(L"bgTransparent", 2, &tmpArgv)) {
+				bgTransparentWideStr = tmpArgv[1];
+			}
+			else {
+				bgTransparentWideStr = L"false";
+			}
+			// -----
 			if (wcscmp(bgTransparentWideStr, L"false") == 0) {
 				bgTransparent[channel] = false;
 			}
