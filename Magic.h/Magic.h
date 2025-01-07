@@ -727,6 +727,16 @@ void MagicMusic(const char* command) {
 
 	// Receive Feedback
 	char* feedback = Internal_ReceiveString();
+	Internal_SendString("Collision Test.");
+	char* tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test3.");
+	tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test5.");
+	tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test7.");
+	tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test9.");
+
 	if (strcmp(feedback, "OK") != 0) {
 		// Error
 		printf("MagicMusic() Error: %s\n", feedback);
@@ -764,6 +774,16 @@ void MagicText(const wchar_t* wideCommand) {
 
 	// Receive Feedback
 	char* feedback = Internal_ReceiveString();
+	Internal_SendString("Collision Test.");
+	char* tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test3.");
+	tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test5.");
+	tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test7.");
+	tmp = Internal_ReceiveString();
+	Internal_SendString("Collision Test9.");
+
 	if (strcmp(feedback, "OK") != 0) {
 		// Error
 		printf("MagicText() Error: %s\n", feedback);
