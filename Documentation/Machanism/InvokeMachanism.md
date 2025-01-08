@@ -60,6 +60,8 @@ Invoke管道变量，由如下两个部分构成：
 
 1. 管道初始化时：`invokeSomething` 默认为0，`invokeReceived` 默认为0
 
+   **重要：在Client开始发送之前，一定要等待，直到 `invokeSomething`  和 `invokeReceived` 均为0，才可以开始发送，否则会出现管道死锁冲突！**
+
 2. Client端：将 `invokeReceived` 置为0，将 `invokeSomething` 置为1，表示要开始发送
 
    注意，设置顺序很重要，如果颠倒，会导致脏写入 `invokeReceived`，从而Host和Client写入冲突
@@ -91,6 +93,7 @@ Client：
 
 ```c
 // Invoke Something
+while (invokeSomething != 0 || invokeReceived != 0);
 invokeReceived = 0;
 invokeSomething = 1;
 while(invokeReceived == 0);  // Wait for Response
