@@ -717,7 +717,7 @@ inline unsigned char MagicGetB(int x, int y) {
 	return G_pixels[((y * 800) + x) * 3 + 0];  // B
 }
 
-// DISABLE MSVC OPEIMIZATION: START
+// DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
@@ -732,6 +732,7 @@ inline unsigned char MagicGetB(int x, int y) {
 void MagicMusic(const char* command) {
 
 	// Invoke Music Interface
+	while (invokeMusic != 0 || invokeReceived != 0);
 	invokeReceived = 0;
 	invokeMusic = 1;
 	while (invokeReceived == 0);  // Wait for Response
@@ -749,12 +750,12 @@ void MagicMusic(const char* command) {
 	delete[] feedback;
 }
 
-// DISABLE MSVC OPEIMIZATION: END
+// DISABLE MSVC OPTIMIZATION: END
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
 
-// DISABLE MSVC OPEIMIZATION: START
+// DISABLE MSVC OPTIMIZATION: START
 #if defined(_MSC_VER)
 #pragma optimize( "", off )
 #endif
@@ -769,6 +770,7 @@ void MagicMusic(const char* command) {
 void MagicText(const wchar_t* wideCommand) {
 
 	// Invoke Music Interface
+	while (invokeText != 0 || invokeReceived != 0);
 	invokeReceived = 0;
 	invokeText = 1;
 	while (invokeReceived == 0);  // Wait for Response
@@ -786,7 +788,7 @@ void MagicText(const wchar_t* wideCommand) {
 	delete[] feedback;
 }
 
-// DISABLE MSVC OPEIMIZATION: END
+// DISABLE MSVC OPTIMIZATION: END
 #if defined(_MSC_VER)
 #pragma optimize( "", on )
 #endif
