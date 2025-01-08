@@ -986,15 +986,6 @@ void MagicMusic_Receiver() {
 		else {
 			Internal_SendString("OK");
 		}
-		char* tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test2.");
-		tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test4.");
-		tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test6.");
-		tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test8.");
-		tmp = Internal_ReceiveString();
 
 		// Release Allocated Memory
 		ArgParser_Freer(&argc, &argv);
@@ -1340,15 +1331,6 @@ void MagicText_Receiver() {
 		else {
 			Internal_SendString("OK");
 		}
-		char* tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test2.");
-		tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test4.");
-		tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test6.");
-		tmp = Internal_ReceiveString();
-		Internal_SendString("Collision Test8.");
-		tmp = Internal_ReceiveString();
 
 		// Release Allocated Memory
 		ArgParserW_Freer(&argc, &argv);
