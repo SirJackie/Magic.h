@@ -509,6 +509,73 @@ void Picture::DrawBrightness(int x_, int y_, float brightness);
 myPicture.DrawBrightness(200, 200, 0.5f);  // 将 myPicture 图片亮度调为0.5，绘制在屏幕上
 ```
 
+### picture.DrawClip()
+
+Picture类型的自带函数，用于按百分比裁剪图片，然后绘制到屏幕上：
+
+```c
+void Picture::DrawClip(
+    int x_, int y_,
+    float clipStartX, float clipEndX,
+    float clipStartY, float clipEndY
+);
+```
+
+**参数**
+
+- x_：要绘制的位置，左上角的X坐标
+- y_：要绘制的位置，左上角的X坐标
+- clipStartX：X轴裁剪的开始百分比，取值范围：`[0.0f, 100.0f]`
+- clipEndX：X轴裁剪的结束百分比，取值范围：`[0.0f, 100.0f]`
+- clipStartY：Y轴裁剪的开始百分比，取值范围：`[0.0f, 100.0f]`
+- clipEndY：Y轴裁剪的结束百分比，取值范围：`[0.0f, 100.0f]`
+
+**返回值**
+
+无
+
+**特性**
+
+- 支持边界裁剪，可以安全的在任意超出屏幕的XY坐标上绘制，而不会发生崩溃问题
+- 支持透明绘制，会自动将RGB值为 `(255, 0, 255)` 的像素识别为透明，跳过绘制透明像素
+
+**示例**
+
+```c
+myPicture.DrawClip(200, 200, 10.0f, 90.0f, 20.0f, 80.0f);
+// 代表：X轴保留10%-90%的部分，Y轴保留20%-80%的部分，从而绘制一张四周被裁切，而变小的图片
+```
+
+### picture.DrawFlip()
+
+Picture类型的自带函数，用于将图片的X轴或Y轴翻转，然后绘制到屏幕上：
+
+```c
+void Picture::DrawFlip(int x_, int y_, bool flipX, bool flipY);
+```
+
+**参数**
+
+- x_：要绘制的位置，左上角的X坐标
+- y_：要绘制的位置，左上角的X坐标
+- flipX：布尔值，是否要翻转X轴；是为 `true`，否为 `false`
+- flipY：布尔值，是否要翻转Y轴；是为 `true`，否为 `false`
+
+**返回值**
+
+无
+
+**特性**
+
+- 支持边界裁剪，可以安全的在任意超出屏幕的XY坐标上绘制，而不会发生崩溃问题
+- 支持透明绘制，会自动将RGB值为 `(255, 0, 255)` 的像素识别为透明，跳过绘制透明像素
+
+**示例**
+
+```c
+myPicture.DrawFlip(200, 200, false, true);  // 将 myPicture 图片，仅翻转Y轴并绘制
+```
+
 ### picture.SetPixel()
 
 单独设置一个像素的颜色：

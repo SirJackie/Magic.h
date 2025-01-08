@@ -164,6 +164,16 @@ int G_bufferDelta = SIGN_LENGTH;  // Start from the first buffer.
 #define clamp(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal-1))? (maxVal-1) : (value)))
 
 /**
+ * @brief: Make sure min <= value <= max. (including left AND right)
+ * @param minVal: Minimum value for clampping.
+ * @param value: The value to clamp.
+ * @param maxVal: Maximum value for clampping.
+ * @return _T: The result of clampped value.
+ */
+
+#define clampF(minVal, value, maxVal) (((value) < (minVal))? (minVal) : (((value) > (maxVal))? (maxVal) : (value)))
+
+/**
  * @brief: Internal bitmap loading function, not encapsulated by the Picture class.
  * @SHOULD NOT BE CALLED BY USERS!
  * @param *filename: a C-String describing the filename of the bitmap.
@@ -813,7 +823,7 @@ public:
 	 *         Support boundary clipping, can safely drawn on any position.
 	 *         Support transparent filtering (filter: (255, 0, 255) )
 	 * @param x_: The x coordinate of the drawing position.
-	 * @param y_: The x coordinate of the drawing position.
+	 * @param y_: The y coordinate of the drawing position.
 	 * @return void
 	 */
 
@@ -854,7 +864,7 @@ public:
 	 *         to control how big the image should be drawn.
 	 * @note: The zooming center: Left-Up Corner of this picture.
 	 * @param x_: The x coordinate of the drawing position.
-	 * @param y_: The x coordinate of the drawing position.
+	 * @param y_: The y coordinate of the drawing position.
 	 * @param ratio: The zooming ratio, in range [0.0f, 1.0f].
 	 * @return void
 	 */
@@ -896,7 +906,7 @@ public:
 	 *         to control how big the image should be drawn.
 	 * @note: The zooming center: The CENTRIC of this picture.
 	 * @param x_: The x coordinate of the drawing position.
-	 * @param y_: The x coordinate of the drawing position.
+	 * @param y_: The y coordinate of the drawing position.
 	 * @param ratio: The zooming ratio, in range [0.0f, 1.0f].
 	 * @return void
 	 */
@@ -914,7 +924,7 @@ public:
 	 *         With a brightness value in range [0.0f, Infinity]
 	 *         to control how bright the image should be drawn.
 	 * @param x_: The x coordinate of the drawing position.
-	 * @param y_: The x coordinate of the drawing position.
+	 * @param y_: The y coordinate of the drawing position.
 	 * @param brightness: The brightness value, in range [0.0f, Infinity].
 	 * @return void
 	 */
@@ -952,6 +962,110 @@ public:
 				ri = clamp(0, ri, 256);
 				gi = clamp(0, gi, 256);
 				bi = clamp(0, bi, 256);
+
+				MagicSetPixel(x, y, ri, gi, bi);
+			}
+		}
+	}
+
+	/**
+	* @brief: Draw this picture in the position (x, y) on the screen,
+	*         With 4 clipping values in range [0.0f, 100.0f]
+	*         to control how to clip the image.
+	* @param x_: The x coordinate of the drawing position.
+	* @param y_: The y coordinate of the drawing position.
+	* @param clipStartX : The Starting Percentage for X-Axis Clipping.
+	* @param clipEndX   : The Ending   Percentage for X-Axis Clipping.
+	* @param clipStartY : The Starting Percentage for Y-Axis Clipping.
+	* @param clipEndY   : The Ending   Percentage for Y-Axis Clipping.
+	* @return void
+	*/
+
+	void DrawClip(
+		int x_, int y_,
+		float clipStartX, float clipEndX,
+		float clipStartY, float clipEndY
+	) {
+
+		clipStartX = clampF(0.0f, clipStartX, 100.0f);
+		clipStartY = clampF(0.0f, clipStartY, 100.0f);
+		clipEndX = clampF(0.0f, clipEndX, 100.0f);
+		clipEndY = clampF(0.0f, clipEndY, 100.0f);
+
+		int clipStartXPixel = int(clipStartX * this->width / 100.0f);
+		int clipStartYPixel = int(clipStartY * this->height / 100.0f);
+		int clipEndXPixel = int(clipEndX * this->width / 100.0f);
+		int clipEndYPixel = int(clipEndY * this->height / 100.0f);
+
+		int screenStartX = x_ + clipStartXPixel;
+		int screenStartY = y_ + clipStartYPixel;
+		int screenEndX = x_ + clipEndXPixel;
+		int screenEndY = y_ + clipEndYPixel;
+
+		screenStartX = clamp(0, screenStartX, G_SCREEN_WIDTH);
+		screenStartY = clamp(0, screenStartY, G_SCREEN_HEIGHT);
+		screenEndX = clamp(0, screenEndX, G_SCREEN_WIDTH);
+		screenEndY = clamp(0, screenEndY, G_SCREEN_HEIGHT);
+
+		unsigned char ri, gi, bi;
+
+		for (int y = screenStartY; y < screenEndY; y++) {
+			for (int x = screenStartX; x < screenEndX; x++) {
+
+				ri = this->GetR(x - x_, y - y_);
+				gi = this->GetG(x - x_, y - y_);
+				bi = this->GetB(x - x_, y - y_);
+
+				if (ri == 255 && gi == 0 && bi == 255) {
+					// Pink, Transparent, Do Not Draw.
+					continue;
+				}
+
+				MagicSetPixel(x, y, ri, gi, bi);
+			}
+		}
+	}
+
+	/**
+	 * @brief: Draw this picture in the position (x, y) on the screen,
+	 *         With 2 flipping boolean values either true or false
+	 *         to control whether X/Y Axis should be flipped.
+	 * @param x_: The x coordinate of the drawing position.
+	 * @param y_: The y coordinate of the drawing position.
+	 * @param flipX: Boolean value, whether to flip X-Axis or not.
+	 * @param flipY: Boolean value, whether to flip Y-Axis or not.
+	 * @return void
+	 */
+
+	void DrawFlip(int x_, int y_, bool flipX, bool flipY) {
+
+		int screenStartX = x_;
+		int screenStartY = y_;
+		int screenEndX = x_ + this->width;
+		int screenEndY = y_ + this->height;
+
+		screenStartX = clamp(0, screenStartX, G_SCREEN_WIDTH);
+		screenStartY = clamp(0, screenStartY, G_SCREEN_HEIGHT);
+		screenEndX = clamp(0, screenEndX, G_SCREEN_WIDTH);
+		screenEndY = clamp(0, screenEndY, G_SCREEN_HEIGHT);
+
+		unsigned char ri, gi, bi;
+		int sourceX, sourceY;
+
+		for (int y = screenStartY; y < screenEndY; y++) {
+			for (int x = screenStartX; x < screenEndX; x++) {
+
+				sourceX = flipX ? (this->width - (x - x_) - 1) : (x - x_);
+				sourceY = flipY ? (this->height - (y - y_) - 1) : (y - y_);
+
+				ri = this->GetR(sourceX, sourceY);
+				gi = this->GetG(sourceX, sourceY);
+				bi = this->GetB(sourceX, sourceY);
+
+				if (ri == 255 && gi == 0 && bi == 255) {
+					// Pink, Transparent, Do Not Draw.
+					continue;
+				}
 
 				MagicSetPixel(x, y, ri, gi, bi);
 			}
