@@ -41,6 +41,23 @@ int main(){
 
 ![SinWaveEffect.gif](./Documentation/GetStarted/C03Picture.assets/SinWaveEffect.gif)
 
+Magic.h 图形框架，也非常适合构建复杂的完整游戏程序。例如由作者开发的示例程序：MagicXiyou 魔法西游
+
+魔法西游是一款回合制战斗游戏的Demo示例程序，用于演示Magic.h图形框架的性能和可能性。
+
+目前实现了如下特性：
+
+- 开始界面：按钮Hover效果，Logo图标的非线性缩放动画
+- 地图界面：2.5D正交投影的地图场景，实现人物自由移动，实现人物帧动画
+- 战斗场景：战斗特效，魔法特效，非线性动画，血量扣除，文字提示信息渲染
+
+您可以点击如下链接，下载并游玩该游戏：
+
+- https://gitee.com/SirJackie/MagicXiyou
+- https://github.com/SirJackie/MagicXiyou
+
+![MagicXiyou_Preview_v1.0.0](README.assets/MagicXiyou_Preview_v1.0.0.png)
+
 ## 关于 MagicHost 编译
 
 > 注：用户无需阅读本节内容即可使用框架，该节属于为框架开发者准备的备注
